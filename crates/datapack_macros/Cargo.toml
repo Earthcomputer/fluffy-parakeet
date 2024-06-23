@@ -1,0 +1,11 @@
+[package]
+name = "datapack_macros"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote.workspace = true
+syn.workspace = true

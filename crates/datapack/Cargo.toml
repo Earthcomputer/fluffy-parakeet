@@ -1,0 +1,14 @@
+[package]
+name = "datapack"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ahash.workspace = true
+datapack_macros = { path = "../datapack_macros" }
+num.workspace = true
+ordered-float.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+zip.workspace = true
