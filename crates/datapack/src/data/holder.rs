@@ -8,7 +8,7 @@ use crate::{DataPack, DataPackResult};
 use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
 use datapack_macros::UntaggedDeserialize;
-use serde::{Serialize};
+use serde::Serialize;
 use std::fmt::{Debug, Formatter};
 use std::mem;
 

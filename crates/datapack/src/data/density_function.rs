@@ -1,6 +1,5 @@
 use crate::data::holder::Holder;
 use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y};
-use crate::identifier::IdentifierBuf;
 use crate::serde_helpers::{NonEmptyVec, Ranged};
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use ordered_float::NotNan;
@@ -14,8 +13,8 @@ pub enum DensityFunction {
     OldBlendedNoise(BlendedNoiseFunction),
     Interpolated(InterpolatedFunction),
     FlatCache(FlatCacheFunction),
-    #[allow(non_camel_case_types)]
-    Cache_2d(Cache2dFunction),
+    #[dispatch(rename = "cache_2d")]
+    Cache2d(Cache2dFunction),
     CacheOnce(CacheOnceFunction),
     CacheAllInCell(CacheAllInCellFunction),
     Noise(NoiseFunction),
@@ -39,71 +38,18 @@ pub enum DensityFunction {
     Min(MinFunction),
     Max(MaxFunction),
     Spline(SplineFunction),
+    #[dispatch(inlinable = "deserialize_constant")]
     Constant(ConstantFunction),
     YClampedGradient(YClampedGradientFunction),
 }
 
-pub fn deserialize_density_function_boxed<'de, D>(
-    deserializer: D,
-) -> Result<Box<DensityFunction>, D::Error>
+fn deserialize_constant<'de, D>(deserializer: D) -> Result<ConstantFunction, D::Error>
 where
     D: Deserializer<'de>,
 {
-    #[derive(UntaggedDeserialize)]
-    enum Surrogate {
-        Constant(NoiseValue),
-        Function(DensityFunction),
-    }
-    match Surrogate::deserialize(deserializer)? {
-        Surrogate::Constant(constant) => {
-            Ok(Box::new(DensityFunction::Constant(ConstantFunction {
-                argument: constant,
-            })))
-        }
-        Surrogate::Function(function) => Ok(Box::new(function)),
-    }
-}
-
-pub fn deserialize_density_function_holder<'de, D>(
-    deserializer: D,
-) -> Result<Holder<DensityFunction>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    #[derive(UntaggedDeserialize)]
-    enum Surrogate {
-        Reference(IdentifierBuf),
-        Constant(NoiseValue),
-        Function(DensityFunction),
-    }
-    match Surrogate::deserialize(deserializer)? {
-        Surrogate::Reference(id) => Ok(Holder::Reference(id)),
-        Surrogate::Constant(constant) => Ok(Holder::Direct(DensityFunction::Constant(
-            ConstantFunction { argument: constant },
-        ))),
-        Surrogate::Function(function) => Ok(Holder::Direct(function)),
-    }
-}
-
-pub fn deserialize_density_function_holder_boxed<'de, D>(
-    deserializer: D,
-) -> Result<Box<Holder<DensityFunction>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    #[derive(UntaggedDeserialize)]
-    enum Surrogate {
-        Reference(IdentifierBuf),
-        Constant(NoiseValue),
-        Function(DensityFunction),
-    }
-    match Surrogate::deserialize(deserializer)? {
-        Surrogate::Reference(id) => Ok(Box::new(Holder::Reference(id))),
-        Surrogate::Constant(constant) => Ok(Box::new(Holder::Direct(DensityFunction::Constant(
-            ConstantFunction { argument: constant },
-        )))),
-        Surrogate::Function(function) => Ok(Box::new(Holder::Direct(function))),
-    }
+    Ok(ConstantFunction {
+        argument: Deserialize::deserialize(deserializer)?,
+    })
 }
 
 pub type NoiseValue = Ranged<NotNan<f64>, -1000000, 1000000>;
@@ -128,31 +74,26 @@ pub struct BlendedNoiseFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct InterpolatedFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct FlatCacheFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Cache2dFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CacheOnceFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CacheAllInCellFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
@@ -168,7 +109,6 @@ pub struct EndIslandsFunction {}
 
 #[derive(Debug, Deserialize)]
 pub struct WeirdScaledSamplerFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub input: Box<Holder<DensityFunction>>,
     pub noise: Holder<NoiseParameters>,
     pub rarity_value_mapper: RarityValueMapper,
@@ -184,11 +124,8 @@ pub enum RarityValueMapper {
 
 #[derive(Debug, Deserialize)]
 pub struct ShiftedNoiseFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub shift_x: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub shift_y: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub shift_z: Box<Holder<DensityFunction>>,
     pub xz_scale: NotNan<f64>,
     pub y_scale: NotNan<f64>,
@@ -197,13 +134,10 @@ pub struct ShiftedNoiseFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct RangeChoiceFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub input: Box<Holder<DensityFunction>>,
     pub min_inclusive: NoiseValue,
     pub max_exclusive: NoiseValue,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub when_in_range: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub when_out_of_range: Box<Holder<DensityFunction>>,
 }
 
@@ -224,13 +158,11 @@ pub struct ShiftFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct BlendDensityFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ClampFunction {
-    #[serde(deserialize_with = "deserialize_density_function_boxed")]
     pub input: Box<DensityFunction>,
     pub min: NoiseValue,
     pub max: NoiseValue,
@@ -238,69 +170,55 @@ pub struct ClampFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct AbsFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SquareFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CubeFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct HalfNegativeFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct QuarterNegativeFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SqueezeFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AddFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument1: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MulFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument1: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MinFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument1: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MaxFunction {
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument1: Box<Holder<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
     pub argument2: Box<Holder<DensityFunction>>,
 }
 
@@ -313,7 +231,6 @@ pub struct SplineFunction {
 pub enum CubicSpline {
     Constant(NotNan<f32>),
     Multipoint {
-        #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
         coordinate: Box<Holder<DensityFunction>>,
         points: NonEmptyVec<SplinePoint>,
     },
