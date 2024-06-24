@@ -1,0 +1,10 @@
+[package]
+name = "interpreter"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+datapack = { path = "../datapack" }
+ahash.workspace = true
+ordered-float.workspace = true
+thiserror.workspace = true

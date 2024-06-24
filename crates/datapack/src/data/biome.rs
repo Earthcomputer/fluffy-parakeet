@@ -1,8 +1,9 @@
 use crate::data::carvers::ConfiguredWorldCarver;
+use crate::data::holder::Holder;
 use crate::data::sound_event::SoundEvent;
 use crate::data::Interval;
 use crate::identifier::IdentifierBuf;
-use crate::serde_helpers::{InlineVec, MaybeReference, Ranged, RangedPositiveU32};
+use crate::serde_helpers::{InlineVec, Ranged, RangedPositiveU32};
 use ahash::AHashMap;
 use ordered_float::NotNan;
 use serde::Deserialize;
@@ -50,7 +51,7 @@ pub struct BiomeSpecialEffects {
     #[serde(default)]
     pub particle: Option<AmbientParticleSettings>,
     #[serde(default)]
-    pub ambient_sound: Option<MaybeReference<SoundEvent>>,
+    pub ambient_sound: Option<Holder<SoundEvent>>,
     #[serde(default)]
     pub mood_sound: Option<AmbientMoodSettings>,
     #[serde(default)]
@@ -76,7 +77,7 @@ pub struct AmbientParticleSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct AmbientMoodSettings {
-    pub sound: MaybeReference<SoundEvent>,
+    pub sound: Holder<SoundEvent>,
     pub tick_delay: i32,
     pub block_search_extent: i32,
     pub offset: NotNan<f64>,
@@ -84,13 +85,13 @@ pub struct AmbientMoodSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct AmbientAdditionsSettings {
-    pub sound: MaybeReference<SoundEvent>,
+    pub sound: Holder<SoundEvent>,
     pub tick_chance: NotNan<f64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Music {
-    pub sound: MaybeReference<SoundEvent>,
+    pub sound: Holder<SoundEvent>,
     pub min_delay: i32,
     pub max_delay: i32,
     pub replace_current_music: bool,
@@ -98,7 +99,7 @@ pub struct Music {
 
 #[derive(Debug, Deserialize)]
 pub struct BiomeGenerationSettings {
-    pub carvers: AHashMap<GenerationStepCarving, InlineVec<MaybeReference<ConfiguredWorldCarver>>>,
+    pub carvers: AHashMap<GenerationStepCarving, InlineVec<Holder<ConfiguredWorldCarver>>>,
     // TODO(feat/features)
     // pub features: Vec<InlineVec<MaybeReference<PlacedFeature>>>,
 }

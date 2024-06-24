@@ -1,9 +1,10 @@
 use crate::data::biome::ClimateParameterPoint;
 use crate::data::block_state::BlockState;
-use crate::data::density_function::{deserialize_maybe_density_function, DensityFunction};
+use crate::data::density_function::{deserialize_density_function_holder, DensityFunction};
+use crate::data::holder::Holder;
 use crate::data::surface_rules::SurfaceRuleSource;
 use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y, DIMENSION_Y_SIZE};
-use crate::serde_helpers::{MaybeReference, Ranged};
+use crate::serde_helpers::Ranged;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -31,34 +32,34 @@ pub struct NoiseSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct NoiseRouter {
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub barrier: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub fluid_level_floodedness: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub fluid_level_spread: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub lava: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub temperature: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub vegetation: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub continents: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub erosion: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub depth: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub ridges: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub initial_density_without_jaggedness: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub final_density: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub vein_toggle: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub vein_ridged: MaybeReference<DensityFunction>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function")]
-    pub vein_gap: MaybeReference<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub barrier: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub fluid_level_floodedness: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub fluid_level_spread: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub lava: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub temperature: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub vegetation: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub continents: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub erosion: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub depth: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub ridges: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub initial_density_without_jaggedness: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub final_density: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub vein_toggle: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub vein_ridged: Holder<DensityFunction>,
+    #[serde(deserialize_with = "deserialize_density_function_holder")]
+    pub vein_gap: Holder<DensityFunction>,
 }

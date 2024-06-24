@@ -1,6 +1,8 @@
-use crate::data::DIMENSION_MIN_Y;
-use crate::serde_helpers::{MaybeReference, NonEmptyVec, Ranged};
-use datapack_macros::DispatchDeserialize;
+use crate::data::holder::Holder;
+use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y};
+use crate::identifier::IdentifierBuf;
+use crate::serde_helpers::{NonEmptyVec, Ranged};
+use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use ordered_float::NotNan;
 use serde::{Deserialize, Deserializer};
 
@@ -47,14 +49,12 @@ pub fn deserialize_density_function_boxed<'de, D>(
 where
     D: Deserializer<'de>,
 {
-    #[derive(Deserialize)]
-    #[serde(untagged)]
+    #[derive(UntaggedDeserialize)]
     enum Surrogate {
         Constant(NoiseValue),
         Function(DensityFunction),
     }
-    let surrogate = Surrogate::deserialize(deserializer)?;
-    match surrogate {
+    match Surrogate::deserialize(deserializer)? {
         Surrogate::Constant(constant) => {
             Ok(Box::new(DensityFunction::Constant(ConstantFunction {
                 argument: constant,
@@ -64,53 +64,45 @@ where
     }
 }
 
-pub fn deserialize_maybe_density_function<'de, D>(
+pub fn deserialize_density_function_holder<'de, D>(
     deserializer: D,
-) -> Result<MaybeReference<DensityFunction>, D::Error>
+) -> Result<Holder<DensityFunction>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    #[derive(Deserialize)]
-    #[serde(untagged)]
+    #[derive(UntaggedDeserialize)]
     enum Surrogate {
+        Reference(IdentifierBuf),
         Constant(NoiseValue),
         Function(DensityFunction),
     }
-    let surrogate = MaybeReference::<Surrogate>::deserialize(deserializer)?;
-    match surrogate {
-        MaybeReference::Direct(Surrogate::Constant(constant)) => Ok(MaybeReference::Direct(
-            DensityFunction::Constant(ConstantFunction { argument: constant }),
-        )),
-        MaybeReference::Direct(Surrogate::Function(function)) => {
-            Ok(MaybeReference::Direct(function))
-        }
-        MaybeReference::Reference(reference) => Ok(MaybeReference::Reference(reference)),
+    match Surrogate::deserialize(deserializer)? {
+        Surrogate::Reference(id) => Ok(Holder::Reference(id)),
+        Surrogate::Constant(constant) => Ok(Holder::Direct(DensityFunction::Constant(
+            ConstantFunction { argument: constant },
+        ))),
+        Surrogate::Function(function) => Ok(Holder::Direct(function)),
     }
 }
 
-fn deserialize_maybe_density_function_boxed<'de, D>(
+pub fn deserialize_density_function_holder_boxed<'de, D>(
     deserializer: D,
-) -> Result<MaybeReference<Box<DensityFunction>>, D::Error>
+) -> Result<Box<Holder<DensityFunction>>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    #[derive(Deserialize)]
-    #[serde(untagged)]
+    #[derive(UntaggedDeserialize)]
     enum Surrogate {
+        Reference(IdentifierBuf),
         Constant(NoiseValue),
         Function(DensityFunction),
     }
-    let surrogate = MaybeReference::<Surrogate>::deserialize(deserializer)?;
-    match surrogate {
-        MaybeReference::Direct(Surrogate::Constant(constant)) => {
-            Ok(MaybeReference::Direct(Box::new(DensityFunction::Constant(
-                ConstantFunction { argument: constant },
-            ))))
-        }
-        MaybeReference::Direct(Surrogate::Function(function)) => {
-            Ok(MaybeReference::Direct(Box::new(function)))
-        }
-        MaybeReference::Reference(reference) => Ok(MaybeReference::Reference(reference)),
+    match Surrogate::deserialize(deserializer)? {
+        Surrogate::Reference(id) => Ok(Box::new(Holder::Reference(id))),
+        Surrogate::Constant(constant) => Ok(Box::new(Holder::Direct(DensityFunction::Constant(
+            ConstantFunction { argument: constant },
+        )))),
+        Surrogate::Function(function) => Ok(Box::new(Holder::Direct(function))),
     }
 }
 
@@ -136,37 +128,37 @@ pub struct BlendedNoiseFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct InterpolatedFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct FlatCacheFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Cache2dFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CacheOnceFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CacheAllInCellFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct NoiseFunction {
-    pub noise: NoiseParameters,
+    pub noise: Holder<NoiseParameters>,
     pub xz_scale: NotNan<f64>,
     pub y_scale: NotNan<f64>,
 }
@@ -176,9 +168,9 @@ pub struct EndIslandsFunction {}
 
 #[derive(Debug, Deserialize)]
 pub struct WeirdScaledSamplerFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub input: MaybeReference<Box<DensityFunction>>,
-    pub noise: NoiseParameters,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub input: Box<Holder<DensityFunction>>,
+    pub noise: Holder<NoiseParameters>,
     pub rarity_value_mapper: RarityValueMapper,
 }
 
@@ -192,48 +184,48 @@ pub enum RarityValueMapper {
 
 #[derive(Debug, Deserialize)]
 pub struct ShiftedNoiseFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub shift_x: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub shift_y: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub shift_z: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub shift_x: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub shift_y: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub shift_z: Box<Holder<DensityFunction>>,
     pub xz_scale: NotNan<f64>,
     pub y_scale: NotNan<f64>,
-    pub noise: NoiseParameters,
+    pub noise: Holder<NoiseParameters>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct RangeChoiceFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub input: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub input: Box<Holder<DensityFunction>>,
     pub min_inclusive: NoiseValue,
-    pub max_inclusive: NoiseValue,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub when_in_range: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub when_out_of_range: MaybeReference<Box<DensityFunction>>,
+    pub max_exclusive: NoiseValue,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub when_in_range: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub when_out_of_range: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ShiftAFunction {
-    pub argument: NoiseParameters,
+    pub argument: Holder<NoiseParameters>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ShiftBFunction {
-    pub argument: NoiseParameters,
+    pub argument: Holder<NoiseParameters>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ShiftFunction {
-    pub argument: NoiseParameters,
+    pub argument: Holder<NoiseParameters>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BlendDensityFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -246,70 +238,70 @@ pub struct ClampFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct AbsFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SquareFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CubeFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct HalfNegativeFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct QuarterNegativeFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SqueezeFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AddFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument1: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument2: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument1: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MulFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument1: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument2: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument1: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MinFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument1: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument2: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument1: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MaxFunction {
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument1: MaybeReference<Box<DensityFunction>>,
-    #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-    pub argument2: MaybeReference<Box<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument1: Box<Holder<DensityFunction>>,
+    #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+    pub argument2: Box<Holder<DensityFunction>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -317,13 +309,12 @@ pub struct SplineFunction {
     pub spline: CubicSpline,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
+#[derive(Debug, UntaggedDeserialize)]
 pub enum CubicSpline {
     Constant(NotNan<f32>),
     Multipoint {
-        #[serde(deserialize_with = "deserialize_maybe_density_function_boxed")]
-        coordinate: MaybeReference<Box<DensityFunction>>,
+        #[serde(deserialize_with = "deserialize_density_function_holder_boxed")]
+        coordinate: Box<Holder<DensityFunction>>,
         points: NonEmptyVec<SplinePoint>,
     },
 }
@@ -342,8 +333,8 @@ pub struct ConstantFunction {
 
 #[derive(Debug, Deserialize)]
 pub struct YClampedGradientFunction {
-    pub from_y: Ranged<i32, { (DIMENSION_MIN_Y * 2) as i64 }, { (DIMENSION_MIN_Y * 2) as i64 }>,
-    pub to_y: Ranged<i32, { (DIMENSION_MIN_Y * 2) as i64 }, { (DIMENSION_MIN_Y * 2) as i64 }>,
+    pub from_y: Ranged<i32, { (DIMENSION_MIN_Y * 2) as i64 }, { (DIMENSION_MAX_Y * 2) as i64 }>,
+    pub to_y: Ranged<i32, { (DIMENSION_MIN_Y * 2) as i64 }, { (DIMENSION_MAX_Y * 2) as i64 }>,
     pub from_value: NoiseValue,
     pub to_value: NoiseValue,
 }

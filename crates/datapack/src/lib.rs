@@ -1,7 +1,8 @@
-mod data;
+pub mod data;
 pub mod identifier;
-mod serde_helpers;
+pub mod serde_helpers;
 
+use crate::data::holder::RegistryLoadedValues;
 use crate::data::world_preset::WorldPreset;
 use crate::identifier::IntoIdentifier;
 use serde::de::DeserializeOwned;
@@ -41,46 +42,47 @@ impl DataPackError {
 pub type DataPackResult<T> = Result<T, DataPackError>;
 
 pub struct DataPack {
-    inner: DataPackInner,
+    file_access: DataPackFileAccess,
+    pub(crate) registry_values: RegistryLoadedValues,
 }
 
 impl DataPack {
     pub fn new(file: impl AsRef<Path>) -> DataPackResult<DataPack> {
         let file = file.as_ref();
         let metadata = fs::symlink_metadata(file)?;
-        if metadata.is_dir() {
-            Ok(DataPack {
-                inner: DataPackInner::Directory(DirectoryDataPack {
-                    path: file.to_path_buf(),
-                }),
+        let file_access = if metadata.is_dir() {
+            DataPackFileAccess::Directory(DirectoryDataPack {
+                path: file.to_path_buf(),
             })
         } else {
-            Ok(DataPack {
-                inner: DataPackInner::Zip(ZipDataPack {
-                    zip: Mutex::new(ZipArchive::new(File::open(file)?)?),
-                }),
+            DataPackFileAccess::Zip(ZipDataPack {
+                zip: Mutex::new(ZipArchive::new(File::open(file)?)?),
             })
-        }
+        };
+        Ok(DataPack {
+            file_access,
+            registry_values: RegistryLoadedValues::default(),
+        })
     }
 
     fn read_json<T: DeserializeOwned>(&self, path: impl AsRef<str>) -> DataPackResult<T> {
-        match &self.inner {
-            DataPackInner::Directory(pack) => pack.read_json(path),
-            DataPackInner::Zip(pack) => pack.read_json(path),
+        match &self.file_access {
+            DataPackFileAccess::Directory(access) => access.read_json(path),
+            DataPackFileAccess::Zip(access) => access.read_json(path),
         }
     }
 
     fn read_bytes(&self, path: impl AsRef<str>) -> DataPackResult<Vec<u8>> {
-        match &self.inner {
-            DataPackInner::Directory(pack) => pack.read_bytes(path),
-            DataPackInner::Zip(pack) => pack.read_bytes(path),
+        match &self.file_access {
+            DataPackFileAccess::Directory(access) => access.read_bytes(path),
+            DataPackFileAccess::Zip(access) => access.read_bytes(path),
         }
     }
 
     fn list_files_under(&self, path: impl AsRef<str>) -> DataPackResult<Vec<String>> {
-        match &self.inner {
-            DataPackInner::Directory(pack) => pack.list_files_under(path),
-            DataPackInner::Zip(pack) => pack.list_files_under(path),
+        match &self.file_access {
+            DataPackFileAccess::Directory(access) => access.list_files_under(path),
+            DataPackFileAccess::Zip(access) => access.list_files_under(path),
         }
     }
 
@@ -92,7 +94,7 @@ impl DataPack {
     }
 }
 
-enum DataPackInner {
+enum DataPackFileAccess {
     Directory(DirectoryDataPack),
     Zip(ZipDataPack),
 }
@@ -170,11 +172,30 @@ impl ZipDataPack {
 
 #[cfg(test)]
 mod tests {
+    use crate::data::biome_source::{BiomeSource, MultiNoiseBiomeSource};
+    use crate::data::world_preset::ChunkGenerator;
     use crate::DataPack;
 
     #[test]
     fn test_read_datapack() {
         let datapack = DataPack::new("server.jar").unwrap();
         let default = datapack.get_world_preset("normal").unwrap();
+        for (dim_id, dim) in &default.dimensions {
+            let ChunkGenerator::Noise(generator) = &dim.generator else {
+                panic!("found non-noise generator")
+            };
+            match &generator.biome_source {
+                BiomeSource::MultiNoise(MultiNoiseBiomeSource::Preset(preset)) => {
+                    let preset = preset.resolve(&datapack).unwrap();
+                }
+                BiomeSource::TheEnd(_) => {}
+                _ => panic!("found wrong biome source"),
+            }
+            println!("getting gen settings for {dim_id}");
+            match generator.settings.resolve(&datapack) {
+                Ok(gen_settings) => println!("{dim_id} generator settings: {gen_settings:#?}"),
+                Err(err) => panic!("{dim_id} error: {err}"),
+            }
+        }
     }
 }

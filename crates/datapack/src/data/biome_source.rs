@@ -1,6 +1,7 @@
 use crate::data::biome::{Biome, ClimateParameterPoint};
+use crate::data::holder::Holder;
 use crate::identifier::IdentifierBuf;
-use crate::serde_helpers::{DefaultOnError, InlineVec, MaybeReference, Ranged, ValueProvider};
+use crate::serde_helpers::{DefaultOnError, InlineVec, Ranged, ValueProvider};
 use datapack_macros::DispatchDeserialize;
 use serde::Deserialize;
 
@@ -14,26 +15,32 @@ pub enum BiomeSource {
 
 #[derive(Debug, Deserialize)]
 pub struct FixedBiomeSource {
-    biome: MaybeReference<Biome>,
+    pub biome: Holder<Biome>,
 }
 
 #[derive(Debug, Deserialize)]
 pub enum MultiNoiseBiomeSource {
     #[serde(rename = "preset")]
-    Preset(IdentifierBuf),
+    Preset(Holder<MultiNoiseBiomeSourceParameterList>),
     #[serde(rename = "biomes")]
     Direct(Vec<MultiNoiseBiomeSourceEntry>),
 }
 
 #[derive(Debug, Deserialize)]
+pub struct MultiNoiseBiomeSourceParameterList {
+    // See MultiNoiseBiomeSourceParameterList.Preset for implementations.
+    pub preset: IdentifierBuf,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct MultiNoiseBiomeSourceEntry {
-    parameters: ClimateParameterPoint,
-    biome: MaybeReference<Biome>,
+    pub parameters: ClimateParameterPoint,
+    pub biome: Holder<Biome>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CheckerboardColumnBiomeSource {
-    pub biomes: InlineVec<MaybeReference<Biome>>,
+    pub biomes: InlineVec<Holder<Biome>>,
     #[serde(default)]
     #[allow(private_interfaces)]
     pub scale: DefaultOnError<Ranged<u32, 0, 62>, DefaultToTwo>,

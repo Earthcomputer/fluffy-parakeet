@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 ahash.workspace = true
+dashmap.workspace = true
 datapack_macros = { path = "../datapack_macros" }
 num.workspace = true
 ordered-float.workspace = true

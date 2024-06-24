@@ -1,4 +1,5 @@
 use crate::serde_helpers::RangedNonNegativeU32;
+use datapack_macros::UntaggedDeserialize;
 use serde::{Deserialize, Deserializer};
 use std::fmt::Debug;
 
@@ -10,18 +11,19 @@ pub const DIMENSION_MAX_Y: i32 = (DIMENSION_Y_SIZE >> 1) as i32 - 1;
 pub const DIMENSION_MIN_Y: i32 = DIMENSION_MAX_Y - DIMENSION_Y_SIZE as i32 + 1;
 
 pub mod biome;
-mod biome_source;
-mod block_state;
-mod carvers;
-mod density_function;
-mod flat;
-mod height_provider;
-mod noise;
-mod surface_rules;
+pub mod biome_source;
+pub mod block_state;
+pub mod carvers;
+pub mod density_function;
+// pub mod feature;
+pub mod flat;
+pub mod height_provider;
+pub mod holder;
+pub mod noise;
+pub mod sound_event;
+pub mod surface_rules;
+pub mod value_provider;
 pub mod world_preset;
-// mod feature;
-mod sound_event;
-mod value_provider;
 
 #[derive(Debug)]
 pub struct Interval<T> {
@@ -37,8 +39,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        #[derive(Deserialize)]
-        #[serde(untagged)]
+        #[derive(UntaggedDeserialize)]
         enum Surrogate<T> {
             Array([T; 2]),
             Named { min: T, max: T },

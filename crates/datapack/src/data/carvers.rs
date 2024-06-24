@@ -1,13 +1,13 @@
 use crate::data::block_state::BlockState;
 use crate::data::height_provider::HeightProvider;
 use crate::data::surface_rules::VerticalAnchor;
+use crate::data::value_provider::FloatProvider;
 use crate::identifier::IdentifierBuf;
 use crate::serde_helpers::{InlineVec, Ranged, RangedNonNegativeU32};
-use datapack_macros::DispatchDeserialize;
+use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use ordered_float::NotNan;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use crate::data::value_provider::FloatProvider;
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum ConfiguredWorldCarver {
@@ -49,8 +49,7 @@ fn debug_air_state() -> BlockState {
     }
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
+#[derive(Debug, UntaggedDeserialize)]
 pub enum AnchorOrHeightProvider {
     Anchor(VerticalAnchor),
     HeightProvider(HeightProvider),

@@ -14,12 +14,14 @@ edition = "2021"
 
 [workspace.dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
+dashmap = "6.0.1"
 num = "0.4.3"
 ordered-float = { version = "4.2.0", features = ["serde"] }
+proc-macro2 = "1.0.86"
 quote = "1.0.36"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
-syn = "2.0.67"
+syn = { version = "2.0.67", features = ["visit"] }
 thiserror = "1.0.61"
 zip = "2.1.3"
 

@@ -8,14 +8,14 @@ use serde::Deserialize;
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum SurfaceRuleSource {
-    Badlands(BadlandsRuleSource),
+    Bandlands(BandlandsRuleSource),
     Block(BlockRuleSource),
     Sequence(SequenceRuleSource),
     Condition(Box<TestRuleSource>),
 }
 
 #[derive(Debug, Deserialize)]
-pub struct BadlandsRuleSource {}
+pub struct BandlandsRuleSource {}
 
 #[derive(Debug, Deserialize)]
 pub struct BlockRuleSource {

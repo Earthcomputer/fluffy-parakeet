@@ -1,4 +1,4 @@
-use datapack_macros::DispatchDeserialize;
+use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use ordered_float::NotNan;
 use serde::{Deserialize, Deserializer};
 
@@ -23,8 +23,7 @@ impl<'de> Deserialize<'de> for FloatProvider {
             Trapezoid(TrapezoidFloatProvider),
         }
 
-        #[derive(Deserialize)]
-        #[serde(untagged)]
+        #[derive(UntaggedDeserialize)]
         enum Surrogate {
             Constant(NotNan<f32>),
             Provider(DispatchSurrogate),

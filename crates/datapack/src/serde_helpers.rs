@@ -1,5 +1,7 @@
 use crate::data::biome::Biome;
+use crate::data::holder::Holder;
 use crate::identifier::IdentifierBuf;
+use datapack_macros::UntaggedDeserialize;
 use num::FromPrimitive;
 use serde::de::{Expected, Unexpected};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -15,7 +17,7 @@ where
     T: Debug,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("LenientOptional").field(&self.0).finish()
+        f.debug_tuple("DefaultOnError").field(&self.0).finish()
     }
 }
 
@@ -93,8 +95,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        #[derive(Deserialize)]
-        #[serde(untagged)]
+        #[derive(UntaggedDeserialize)]
         enum PossiblyInlinedSingleton<T> {
             Vec(Vec<T>),
             Inline(T),
@@ -290,13 +291,6 @@ impl<T, const MIN: i64, const MAX: i64, const SCALE: u64> DerefMut for Ranged<T,
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(untagged)]
-pub enum MaybeReference<T> {
-    Reference(IdentifierBuf),
-    Direct(T),
-}
-
 pub trait ValueProvider<T> {
     fn provide() -> T;
 }
@@ -322,8 +316,8 @@ impl ValueProvider<IdentifierBuf> for DefaultToAir {
 
 pub struct DefaultToPlains;
 
-impl ValueProvider<MaybeReference<Biome>> for DefaultToPlains {
-    fn provide() -> MaybeReference<Biome> {
-        MaybeReference::Reference(IdentifierBuf::new("plains").unwrap())
+impl ValueProvider<Holder<Biome>> for DefaultToPlains {
+    fn provide() -> Holder<Biome> {
+        Holder::Reference(IdentifierBuf::new("plains").unwrap())
     }
 }

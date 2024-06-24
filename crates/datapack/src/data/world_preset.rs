@@ -1,8 +1,8 @@
 use crate::data::biome_source::BiomeSource;
 use crate::data::flat::FlatLevelGeneratorSettings;
+use crate::data::holder::Holder;
 use crate::data::noise::NoiseGeneratorSettings;
 use crate::identifier::{Identifier, IdentifierBuf};
-use crate::serde_helpers::MaybeReference;
 use ahash::AHashMap;
 use datapack_macros::DispatchDeserialize;
 use serde::{Deserialize, Deserializer};
@@ -45,7 +45,7 @@ pub enum ChunkGenerator {
 #[derive(Debug, Deserialize)]
 pub struct NoiseBasedChunkGenerator {
     pub biome_source: BiomeSource,
-    pub settings: MaybeReference<NoiseGeneratorSettings>,
+    pub settings: Holder<NoiseGeneratorSettings>,
 }
 
 #[derive(Debug, Deserialize)]
