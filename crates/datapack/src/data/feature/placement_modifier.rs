@@ -1,8 +1,11 @@
-use std::ops::Range;
+use glam::IVec3;
 use ordered_float::NotNan;
 use serde::Deserialize;
 use datapack_macros::DispatchDeserialize;
+use util::direction::Direction;
+use util::heightmap_type::HeightmapType;
 use crate::data::biome::GenerationStepCarving;
+use crate::data::block_predicate::BlockPredicate;
 use crate::data::height_provider::HeightProvider;
 use crate::serde_helpers::{DefaultOnError, Ranged, RangedPositiveU32};
 
@@ -45,16 +48,17 @@ pub struct CountLikePlacement {
 
 #[derive(Debug, Deserialize)]
 pub struct EnvironmentScanPlacement {
-    pub direction_of_search: VerticalDirection,
+    #[serde(deserialize_with = "Direction::deserialize_horizontal")]
+    pub direction_of_search: Direction,
     pub target_condition: BlockPredicate,
-    #[serde(default = "block_predicate::always_true")]
+    #[serde(default = "BlockPredicate::always_true")]
     pub allowed_search_condition: BlockPredicate,
     pub max_steps: Ranged<i32, 1, 32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct FixedPlacement {
-    pub positions: Vec<BlockPos>,
+    pub positions: Vec<IVec3>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -101,7 +105,7 @@ pub struct SurfaceRelativeThresholdFilter {
     pub heightmap: HeightmapType,
     #[serde(default = "min_i32")]
     pub min_inclusive: i32,
-    #[serde(default = "max_i32")],
+    #[serde(default = "max_i32")]
     pub max_inclusive: i32,
 }
 

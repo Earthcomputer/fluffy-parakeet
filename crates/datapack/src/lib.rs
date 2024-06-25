@@ -1,10 +1,9 @@
 pub mod data;
-pub mod identifier;
 pub mod serde_helpers;
 
 use crate::data::holder::RegistryLoadedValues;
 use crate::data::world_preset::WorldPreset;
-use crate::identifier::IntoIdentifier;
+use util::identifier::IntoIdentifier;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use std::fs::File;
@@ -133,8 +132,10 @@ impl DirectoryDataPack {
             Ok(())
         }
 
+        let path = path.as_ref();
+        assert!(path.ends_with('/'));
+        let path = Path::new(path);
         let mut result = Vec::new();
-        let path = Path::new(path.as_ref());
         walk_dir(path, path, &mut result)?;
         Ok(result)
     }
@@ -160,11 +161,13 @@ impl ZipDataPack {
     }
 
     fn list_files_under(&self, path: impl AsRef<str>) -> DataPackResult<Vec<String>> {
-        let zip = self.zip.lock().unwrap();
         let path = path.as_ref();
+        assert!(path.ends_with('/'));
+        let zip = self.zip.lock().unwrap();
         Ok(zip
             .file_names()
             .filter(|file| file.starts_with(path))
+            .filter(|file| !file.ends_with('/'))
             .map(|file| file.to_owned())
             .collect())
     }
@@ -172,6 +175,7 @@ impl ZipDataPack {
 
 #[cfg(test)]
 mod tests {
+    use crate::data::biome::Biome;
     use crate::data::biome_source::{BiomeSource, MultiNoiseBiomeSource};
     use crate::data::world_preset::ChunkGenerator;
     use crate::DataPack;
@@ -193,9 +197,14 @@ mod tests {
             }
             println!("getting gen settings for {dim_id}");
             match generator.settings.resolve(&datapack) {
-                Ok(gen_settings) => println!("{dim_id} generator settings: {gen_settings:#?}"),
+                Ok(gen_settings) => {/* println!("{dim_id} generator settings: {gen_settings:#?}") */}
                 Err(err) => panic!("{dim_id} error: {err}"),
             }
+        }
+
+        for biome_path in datapack.list_files_under("data/minecraft/worldgen/biome/").unwrap() {
+            println!("reading biome {biome_path}");
+            datapack.read_json::<Biome>(biome_path).unwrap();
         }
     }
 }

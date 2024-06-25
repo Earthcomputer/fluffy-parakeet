@@ -199,11 +199,13 @@ dependencies = [
  "ahash",
  "dashmap",
  "datapack_macros",
+ "glam",
  "num",
  "ordered-float",
  "serde",
  "serde_json",
  "thiserror",
+ "util",
  "zip",
 ]
 
@@ -303,6 +305,15 @@ dependencies = [
  "cfg-if",
  "libc",
  "wasi",
+]
+
+[[package]]
+name = "glam"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "779ae4bf7e8421cf91c0b3b64e7e8b40b862fba4d393f59150042de7c4965a94"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -746,6 +757,15 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+
+[[package]]
+name = "util"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "serde",
+ "thiserror",
+]
 
 [[package]]
 name = "version_check"

@@ -1,4 +1,4 @@
-use crate::identifier::IdentifierBuf;
+use util::identifier::IdentifierBuf;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 

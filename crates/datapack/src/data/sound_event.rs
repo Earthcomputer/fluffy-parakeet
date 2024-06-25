@@ -1,4 +1,4 @@
-use crate::identifier::IdentifierBuf;
+use util::identifier::IdentifierBuf;
 use crate::serde_helpers::DefaultOnError;
 use serde::Deserialize;
 

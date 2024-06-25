@@ -1,6 +1,6 @@
 use crate::data::biome::{Biome, ClimateParameterPoint};
 use crate::data::holder::Holder;
-use crate::identifier::IdentifierBuf;
+use util::identifier::IdentifierBuf;
 use crate::serde_helpers::{DefaultOnError, InlineVec, Ranged, ValueProvider};
 use datapack_macros::DispatchDeserialize;
 use serde::Deserialize;

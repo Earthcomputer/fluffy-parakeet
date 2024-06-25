@@ -15,7 +15,7 @@ pub mod biome_source;
 pub mod block_state;
 pub mod carvers;
 pub mod density_function;
-// pub mod feature;
+pub mod feature;
 pub mod flat;
 pub mod height_provider;
 pub mod holder;
@@ -24,6 +24,7 @@ pub mod sound_event;
 pub mod surface_rules;
 pub mod value_provider;
 pub mod world_preset;
+mod block_predicate;
 
 #[derive(Debug)]
 pub struct Interval<T> {
@@ -67,4 +68,8 @@ where
 pub struct SimpleWeightedListEntry<T> {
     pub data: T,
     pub weight: RangedNonNegativeU32,
+}
+
+mod sealed {
+    pub trait Sealed {}
 }

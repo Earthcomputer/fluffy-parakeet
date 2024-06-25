@@ -1,7 +1,7 @@
 use crate::data::biome::Biome;
 use crate::data::holder::Holder;
 use crate::data::DIMENSION_Y_SIZE;
-use crate::identifier::IdentifierBuf;
+use util::identifier::IdentifierBuf;
 use crate::serde_helpers::{DefaultOnError, DefaultToAir, DefaultToPlains, InlineVec, Ranged};
 use serde::Deserialize;
 

@@ -1,6 +1,6 @@
 use crate::data::block_state::BlockState;
 use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y};
-use crate::identifier::IdentifierBuf;
+use util::identifier::IdentifierBuf;
 use crate::serde_helpers::Ranged;
 use datapack_macros::DispatchDeserialize;
 use ordered_float::NotNan;

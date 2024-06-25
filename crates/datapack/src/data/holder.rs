@@ -3,7 +3,7 @@ use crate::data::biome_source::MultiNoiseBiomeSourceParameterList;
 use crate::data::carvers::ConfiguredWorldCarver;
 use crate::data::density_function::{DensityFunction, NoiseParameters};
 use crate::data::noise::NoiseGeneratorSettings;
-use crate::identifier::{Identifier, IdentifierBuf};
+use util::identifier::{Identifier, IdentifierBuf};
 use crate::{DataPack, DataPackResult};
 use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
@@ -11,6 +11,9 @@ use datapack_macros::UntaggedDeserialize;
 use serde::Serialize;
 use std::fmt::{Debug, Formatter};
 use std::mem;
+use crate::data::feature::configured_feature::ConfiguredFeature;
+use crate::data::feature::PlacedFeature;
+use crate::data::sealed::Sealed;
 
 /// # Invariants
 /// The following invariants hold until after the start of the Drop function:
@@ -77,7 +80,7 @@ impl<T> Default for RegistryMap<T> {
     }
 }
 
-trait RegistryType: Sized {
+pub trait RegistryType: Sealed + Sized {
     fn load(datapack: &DataPack, id: &Identifier) -> DataPackResult<Self>;
     fn get_loaded_values(loaded_values: &RegistryLoadedValues) -> &RegistryMap<Self>;
 }
@@ -85,6 +88,8 @@ trait RegistryType: Sized {
 macro_rules! registries {
     ($($id:ident: $type:ty[$folder:literal];)*) => {
         $(
+            impl Sealed for $type {}
+
             impl RegistryType for $type {
                 fn load(datapack: &DataPack, id: &Identifier) -> DataPackResult<Self> {
                     datapack.read_json(id.to_datapack_path($folder, "json"))
@@ -108,10 +113,12 @@ macro_rules! registries {
 registries! {
     biome: Biome["worldgen/biome"];
     configured_carver: ConfiguredWorldCarver["worldgen/configured_carver"];
+    configured_feature: ConfiguredFeature["worldgen/configured_feature"];
     density_function: DensityFunction["worldgen/density_function"];
     multi_noise_biome_source_parameter_list: MultiNoiseBiomeSourceParameterList["worldgen/multi_noise_biome_source_parameter_list"];
     noise: NoiseParameters["worldgen/noise"];
     noise_settings: NoiseGeneratorSettings["worldgen/noise_settings"];
+    placed_feature: PlacedFeature["worldgen/placed_feature"];
 }
 
 #[derive(Debug, UntaggedDeserialize, Serialize)]
@@ -121,7 +128,6 @@ pub enum Holder<T> {
     Direct(T),
 }
 
-#[allow(private_bounds)]
 impl<T> Holder<T>
 where
     T: RegistryType,

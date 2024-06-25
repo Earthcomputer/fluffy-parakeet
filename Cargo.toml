@@ -15,6 +15,7 @@ edition = "2021"
 [workspace.dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
 dashmap = "6.0.1"
+glam = { version = "0.28.0", features = ["serde"] }
 num = "0.4.3"
 ordered-float = { version = "4.2.0", features = ["serde"] }
 proc-macro2 = "1.0.86"

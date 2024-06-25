@@ -2,7 +2,7 @@ use crate::data::biome_source::BiomeSource;
 use crate::data::flat::FlatLevelGeneratorSettings;
 use crate::data::holder::Holder;
 use crate::data::noise::NoiseGeneratorSettings;
-use crate::identifier::{Identifier, IdentifierBuf};
+use util::identifier::{Identifier, IdentifierBuf};
 use ahash::AHashMap;
 use datapack_macros::DispatchDeserialize;
 use serde::{Deserialize, Deserializer};
