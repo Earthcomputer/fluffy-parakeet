@@ -1,13 +1,17 @@
+use crate::built_in_registries::Block;
 use crate::data::block_state::BlockState;
+use crate::data::feature::VerticalAnchor;
 use crate::data::height_provider::HeightProvider;
-use crate::data::surface_rules::VerticalAnchor;
+use crate::data::tag::HolderSet;
 use crate::data::value_provider::FloatProvider;
-use util::identifier::IdentifierBuf;
-use crate::serde_helpers::{InlineVec, Ranged, RangedNonNegativeU32};
+use crate::float_provider_deserializer;
+use crate::serde_helpers::{NonNegativeU32, Ranged};
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use ordered_float::NotNan;
-use serde::Deserialize;
+use serde::{Deserialize};
 use std::collections::BTreeMap;
+use util::identifier::IdentifierBuf;
+use crate::data::feature::configured_feature::ProbabilityFeatureConfiguration;
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum ConfiguredWorldCarver {
@@ -18,14 +22,14 @@ pub enum ConfiguredWorldCarver {
 
 #[derive(Debug, Deserialize)]
 pub struct CarverConfiguration {
-    // TODO(feat/features): move to a ProbabilityFeatureConfiguration base once that exists.
-    pub probability: Ranged<NotNan<f32>, 0, 1>,
+    #[serde(flatten)]
+    pub probability: ProbabilityFeatureConfiguration,
     pub y: AnchorOrHeightProvider,
     #[serde(rename = "yScale")]
     pub y_scale: FloatProvider,
     pub lava_level: VerticalAnchor,
     pub debug_settings: Option<CarverDebugSettings>,
-    pub replaceable: InlineVec<IdentifierBuf>,
+    pub replaceable: HolderSet<Block>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -62,9 +66,11 @@ pub struct CaveCarverConfiguration {
     pub horizontal_radius_multiplier: FloatProvider,
     pub vertical_radius_multiplier: FloatProvider,
 
-    // TODO: this is ranged -1 to 1
+    #[serde(deserialize_with = "deserialize_floor_level")]
     pub floor_level: FloatProvider,
 }
+
+float_provider_deserializer!(deserialize_floor_level, -1.0, 1.0);
 
 #[derive(Debug, Deserialize)]
 pub struct CanyonCarverConfiguration {
@@ -78,7 +84,7 @@ pub struct CanyonCarverConfiguration {
 pub struct CanyonShapeConfiguration {
     pub distance_factor: NotNan<f32>,
     pub thickness: NotNan<f32>,
-    pub width_smoothness: RangedNonNegativeU32,
+    pub width_smoothness: NonNegativeU32,
     pub horizontal_radius_factor: FloatProvider,
     pub vertical_radius_default_factor: NotNan<f32>,
     pub vertical_radius_center_factor: NotNan<f32>,

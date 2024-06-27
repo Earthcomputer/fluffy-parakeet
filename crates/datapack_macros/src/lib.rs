@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span};
+use proc_macro2::Ident;
 use quote::{format_ident, quote};
 use std::collections::BTreeSet;
 use syn::parse::{Parse, ParseStream};
@@ -34,6 +34,7 @@ fn deserialize_impl_generics<'a>(
 enum DispatchDirective {
     Inlinable(Option<Path>),
     Rename(String),
+    TagName(String),
 }
 
 impl Parse for DispatchDirective {
@@ -63,6 +64,12 @@ impl Parse for DispatchDirective {
                 }
                 Ok(DispatchDirective::Rename(name))
             }
+            "tag_name" => {
+                input.parse::<Token![=]>()?;
+                let name_tok: LitStr = input.parse()?;
+                let name = name_tok.value();
+                Ok(DispatchDirective::TagName(name))
+            }
             _ => Err(Error::new_spanned(ident, "unknown directive")),
         }
     }
@@ -83,7 +90,6 @@ pub fn derive_dispatched(item: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) =
         deserialize_impl_generics(&derive_item.generics, &mut lifetime_generics);
 
-    let dispatch_ident = Ident::new("dispatch", Span::call_site());
     let mut inline_variant_test = None;
 
     let mut type_tests = Vec::new();
@@ -120,7 +126,7 @@ pub fn derive_dispatched(item: TokenStream) -> TokenStream {
         let mut inlinable = false;
         let mut inlinable_func = None;
         for attr in &variant.attrs {
-            if !attr.path().is_ident(&dispatch_ident) {
+            if !attr.path().is_ident("dispatch") {
                 continue;
             }
             let directive: DispatchDirective = match attr.parse_args() {
@@ -138,6 +144,11 @@ pub fn derive_dispatched(item: TokenStream) -> TokenStream {
                 }
                 DispatchDirective::Rename(new_name) => {
                     identifier_name = new_name;
+                }
+                _ => {
+                    return Error::new_spanned(attr, "This dispatch directive is not allowed here")
+                        .into_compile_error()
+                        .into();
                 }
             }
         }
@@ -174,6 +185,27 @@ pub fn derive_dispatched(item: TokenStream) -> TokenStream {
         }
     };
 
+    let mut tag_name = "type".to_owned();
+
+    for attr in &derive_item.attrs {
+        if !attr.path().is_ident("dispatch") {
+            continue;
+        }
+        let directive: DispatchDirective = match attr.parse_args() {
+            Ok(directive) => directive,
+            Err(err) => return err.into_compile_error().into(),
+        };
+
+        match directive {
+            DispatchDirective::TagName(name) => tag_name = name,
+            _ => {
+                return Error::new_spanned(attr, "This dispatch directive is not allowed here")
+                    .into_compile_error()
+                    .into();
+            }
+        }
+    }
+
     let expected = format!("valid type id for {enum_name}");
     From::from(quote! {
         impl #impl_generics ::serde::de::Deserialize<'de> for #enum_name #ty_generics #where_clause {
@@ -186,8 +218,8 @@ pub fn derive_dispatched(item: TokenStream) -> TokenStream {
                 let ::serde_json::value::Value::Object(mut obj) = value else {
                     return Err(#not_an_object_error);
                 };
-                let Some(ty) = obj.remove("type") else {
-                    return Err(::serde::de::Error::missing_field("type"));
+                let Some(ty) = obj.remove(#tag_name) else {
+                    return Err(::serde::de::Error::missing_field(#tag_name));
                 };
                 let ::serde_json::value::Value::String(ty) = ty else {
                     return Err(::serde::de::Error::invalid_type(

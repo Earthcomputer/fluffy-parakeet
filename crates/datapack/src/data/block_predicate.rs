@@ -1,9 +1,11 @@
-use serde::Deserialize;
+use crate::built_in_registries::{Block, Fluid};
+use crate::data::block_state::BlockState;
+use crate::data::tag::HolderSet;
+use crate::serde_helpers::RangedIVec3;
 use datapack_macros::DispatchDeserialize;
+use serde::Deserialize;
 use util::direction::Direction;
 use util::identifier::IdentifierBuf;
-use crate::data::block_state::BlockState;
-use crate::serde_helpers::{InlineVec, RangedIVec3};
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum BlockPredicate {
@@ -32,7 +34,7 @@ impl BlockPredicate {
 pub struct MatchingBlocksPredicate {
     #[serde(default)]
     pub offset: RangedIVec3<-16, 16, -16, 16>,
-    pub blocks: InlineVec<IdentifierBuf>,
+    pub blocks: HolderSet<Block>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -46,7 +48,7 @@ pub struct MatchingBlockTagPredicate {
 pub struct MatchingFluidsPredicate {
     #[serde(default)]
     pub offset: RangedIVec3<-16, 16, -16, 16>,
-    pub fluids: InlineVec<IdentifierBuf>,
+    pub fluids: HolderSet<Fluid>,
 }
 
 #[derive(Debug, Deserialize)]

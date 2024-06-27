@@ -1,6 +1,6 @@
-use crate::data::surface_rules::VerticalAnchor;
+use crate::data::feature::VerticalAnchor;
 use crate::data::SimpleWeightedListEntry;
-use crate::serde_helpers::{Ranged, RangedNonNegativeU32};
+use crate::serde_helpers::{NonNegativeU32, Ranged};
 use datapack_macros::DispatchDeserialize;
 use serde::Deserialize;
 
@@ -18,11 +18,11 @@ pub enum HeightProvider {
 pub struct BiasedOrVeryBiasedToBottomHeight {
     pub min_inclusive: VerticalAnchor,
     pub max_inclusive: VerticalAnchor,
-    #[serde(default = "one_as_non_negative_u32")]
-    pub inner: RangedNonNegativeU32,
+    #[serde(default = "one")]
+    pub inner: NonNegativeU32,
 }
 
-fn one_as_non_negative_u32() -> RangedNonNegativeU32 {
+fn one() -> NonNegativeU32 {
     Ranged::from(1)
 }
 

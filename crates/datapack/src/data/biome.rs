@@ -1,13 +1,14 @@
 use crate::data::carvers::ConfiguredWorldCarver;
+use crate::data::feature::PlacedFeature;
 use crate::data::holder::Holder;
 use crate::data::sound_event::SoundEvent;
+use crate::data::tag::HolderValueSet;
 use crate::data::Interval;
-use util::identifier::IdentifierBuf;
-use crate::serde_helpers::{InlineVec, Ranged, RangedPositiveU32};
+use crate::serde_helpers::{PositiveU32, Ranged};
 use ahash::AHashMap;
 use ordered_float::NotNan;
 use serde::Deserialize;
-use crate::data::feature::PlacedFeature;
+use util::identifier::IdentifierBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct Biome {
@@ -102,8 +103,7 @@ pub struct Music {
 
 #[derive(Debug, Deserialize)]
 pub struct BiomeGenerationSettings {
-    pub carvers: AHashMap<GenerationStepCarving, InlineVec<Holder<ConfiguredWorldCarver>>>,
-    // TODO(feat/features)
+    pub carvers: AHashMap<GenerationStepCarving, HolderValueSet<ConfiguredWorldCarver>>,
     pub features: Vec<Vec<Holder<PlacedFeature>>>,
 }
 
@@ -126,9 +126,9 @@ pub struct SpawnerData {
     pub ty: IdentifierBuf,
     pub weight: u32,
     #[serde(rename = "minCount")]
-    pub min_count: RangedPositiveU32,
+    pub min_count: PositiveU32,
     #[serde(rename = "maxCount")]
-    pub max_count: RangedPositiveU32,
+    pub max_count: PositiveU32,
 }
 
 #[derive(Debug, Deserialize)]

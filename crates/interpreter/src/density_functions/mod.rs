@@ -1,9 +1,19 @@
-use datapack::data::density_function::{AbsFunction, AddFunction, BeardifierFunction, BlendAlphaFunction, BlendDensityFunction, BlendedNoiseFunction, BlendOffsetFunction, Cache2dFunction, CacheAllInCellFunction, CacheOnceFunction, ClampFunction, ConstantFunction, CubeFunction, DensityFunction, EndIslandsFunction, FlatCacheFunction, HalfNegativeFunction, InterpolatedFunction, MaxFunction, MinFunction, MulFunction, NoiseFunction, QuarterNegativeFunction, RangeChoiceFunction, ShiftAFunction, ShiftBFunction, ShiftedNoiseFunction, ShiftFunction, SplineFunction, SquareFunction, SqueezeFunction, WeirdScaledSamplerFunction, YClampedGradientFunction};
-use datapack::DataPackResult;
 use crate::sealed::Sealed;
+use datapack::data::density_function::{
+    AbsFunction, AddFunction, BeardifierFunction, BlendAlphaFunction, BlendDensityFunction,
+    BlendOffsetFunction, BlendedNoiseFunction, Cache2dFunction, CacheAllInCellFunction,
+    CacheOnceFunction, ClampFunction, ConstantFunction, CubeFunction, DensityFunction,
+    EndIslandsFunction, FlatCacheFunction, HalfNegativeFunction, InterpolatedFunction, MaxFunction,
+    MinFunction, MulFunction, NoiseFunction, QuarterNegativeFunction, RangeChoiceFunction,
+    ShiftAFunction, ShiftBFunction, ShiftFunction, ShiftedNoiseFunction, SplineFunction,
+    SquareFunction, SqueezeFunction, WeirdScaledSamplerFunction, YClampedGradientFunction,
+};
+use datapack::DataPackResult;
 
 pub trait DensityFunctionExt: Sealed {
-    fn compute<I>(&self, interpreter: &I) -> DataPackResult<f64> where I: Interpreter;
+    fn compute<I>(&self, interpreter: &I) -> DataPackResult<f64>
+    where
+        I: Interpreter;
     fn min_value(&self) -> DataPackResult<f64>;
     fn max_value(&self) -> DataPackResult<f64>;
 }
@@ -66,7 +76,6 @@ macro_rules! define_wrapper_ext {
 
 // BlendedNoise
 
-
 pub trait Interpreter {
     fn handle_blend_alpha(&self, function: &BlendAlphaFunction) -> DataPackResult<f64>;
     fn handle_blend_offset(&self, function: &BlendOffsetFunction) -> DataPackResult<f64>;
@@ -79,7 +88,10 @@ pub trait Interpreter {
     fn handle_cache_all_in_cell(&self, function: &CacheAllInCellFunction) -> DataPackResult<f64>;
     fn handle_noise(&self, function: &NoiseFunction) -> DataPackResult<f64>;
     fn handle_end_islands(&self, function: &EndIslandsFunction) -> DataPackResult<f64>;
-    fn handle_weird_scaled_sampler(&self, function: &WeirdScaledSamplerFunction) -> DataPackResult<f64>;
+    fn handle_weird_scaled_sampler(
+        &self,
+        function: &WeirdScaledSamplerFunction,
+    ) -> DataPackResult<f64>;
     fn handle_shifted_noise(&self, function: &ShiftedNoiseFunction) -> DataPackResult<f64>;
     fn handle_range_choice(&self, function: &RangeChoiceFunction) -> DataPackResult<f64>;
     fn handle_shift_a(&self, function: &ShiftAFunction) -> DataPackResult<f64>;
@@ -99,5 +111,6 @@ pub trait Interpreter {
     fn handle_max(&self, function: &MaxFunction) -> DataPackResult<f64>;
     fn handle_spline(&self, function: &SplineFunction) -> DataPackResult<f64>;
     fn handle_constant(&self, function: &ConstantFunction) -> DataPackResult<f64>;
-    fn handle_y_clamped_gradient(&self, function: &YClampedGradientFunction) -> DataPackResult<f64>;
+    fn handle_y_clamped_gradient(&self, function: &YClampedGradientFunction)
+        -> DataPackResult<f64>;
 }

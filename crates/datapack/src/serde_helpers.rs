@@ -1,14 +1,14 @@
 use crate::data::biome::Biome;
 use crate::data::holder::Holder;
-use util::identifier::IdentifierBuf;
-use datapack_macros::UntaggedDeserialize;
+use glam::IVec3;
 use num::FromPrimitive;
+use ordered_float::NotNan;
 use serde::de::{Expected, Unexpected};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut, Div};
-use glam::IVec3;
+use util::identifier::IdentifierBuf;
 
 /// Converts deserialize errors into the value provided by `Def`
 pub struct DefaultOnError<T, Def = DefaultValueProvider<T>>(T, PhantomData<Def>);
@@ -78,74 +78,6 @@ impl<T, Def> DerefMut for DefaultOnError<T, Def> {
     }
 }
 
-/// If a sequence is of length 1, inlines that value
-#[derive(Debug)]
-pub struct InlineVec<T>(Vec<T>);
-
-impl<T> Default for InlineVec<T> {
-    fn default() -> Self {
-        InlineVec(Vec::default())
-    }
-}
-
-impl<'de, T> Deserialize<'de> for InlineVec<T>
-where
-    T: Deserialize<'de>,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(UntaggedDeserialize)]
-        enum PossiblyInlinedSingleton<T> {
-            Vec(Vec<T>),
-            Inline(T),
-        }
-
-        let possibly_inlined = PossiblyInlinedSingleton::deserialize(deserializer)?;
-        match possibly_inlined {
-            PossiblyInlinedSingleton::Vec(vec) => Ok(Self(vec)),
-            PossiblyInlinedSingleton::Inline(val) => Ok(Self(vec![val])),
-        }
-    }
-}
-
-impl<T> Serialize for InlineVec<T>
-where
-    T: Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        if self.0.len() == 1 {
-            self.0[0].serialize(serializer)
-        } else {
-            self.0.serialize(serializer)
-        }
-    }
-}
-
-impl<T> From<Vec<T>> for InlineVec<T> {
-    fn from(value: Vec<T>) -> Self {
-        Self(value)
-    }
-}
-
-impl<T> Deref for InlineVec<T> {
-    type Target = Vec<T>;
-
-    fn deref(&self) -> &Vec<T> {
-        &self.0
-    }
-}
-
-impl<T> DerefMut for InlineVec<T> {
-    fn deref_mut(&mut self) -> &mut Vec<T> {
-        &mut self.0
-    }
-}
-
 #[derive(Debug)]
 pub struct NonEmptyVec<T>(Vec<T>);
 
@@ -204,8 +136,8 @@ impl<T> DerefMut for NonEmptyVec<T> {
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Ranged<T, const MIN: i64, const MAX: i64, const SCALE: u64 = 1>(T);
 
-pub type RangedNonNegativeU32 = Ranged<u32, 0, { i32::MAX as i64 }>;
-pub type RangedPositiveU32 = Ranged<u32, 1, { i32::MAX as i64 }>;
+pub type NonNegativeU32 = Ranged<u32, 0, { i32::MAX as i64 }>;
+pub type PositiveU32 = Ranged<u32, 1, { i32::MAX as i64 }>;
 
 impl<'de, T, const MIN: i64, const MAX: i64, const SCALE: u64> Deserialize<'de>
     for Ranged<T, MIN, MAX, SCALE>
@@ -220,16 +152,10 @@ where
         let min = T::from_i64(MIN).unwrap() / T::from_u64(SCALE).unwrap();
         let max = T::from_i64(MAX).unwrap() / T::from_u64(SCALE).unwrap();
         if result < min {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("value out of range"),
-                &ExpectedAtLeast(min),
-            ));
+            return Err(value_too_small_error(min));
         }
         if result > max {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("value out of range"),
-                &ExpectedAtMost(max),
-            ));
+            return Err(value_too_big_error(max));
         }
         Ok(Ranged(result))
     }
@@ -270,72 +196,92 @@ impl<T, const MIN: i64, const MAX: i64, const SCALE: u64> DerefMut for Ranged<T,
     }
 }
 
+pub struct PositiveF32;
+impl PositiveF32 {
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<NotNan<f32>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Deserialize::deserialize(deserializer)?;
+        if value <= NotNan::default() {
+            return Err(value_too_small_error(f32::MIN_POSITIVE));
+        }
+        Ok(value)
+    }
+
+    pub fn serialize<S>(value: &NotNan<f32>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        (*value)
+            .max(NotNan::new(f32::MIN_POSITIVE).unwrap())
+            .serialize(serializer)
+    }
+}
+
 /// Checks that an [`IVec3`] is in range on deserialization, clamps it on serialization
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
-pub struct RangedIVec3<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32>(IVec3);
+pub struct RangedIVec3<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32>(
+    IVec3,
+);
 
-impl<'de, const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> Deserialize<'de> for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y> {
+impl<'de, const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> Deserialize<'de>
+    for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y>
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de>
+        D: Deserializer<'de>,
     {
         let vec = IVec3::deserialize(deserializer)?;
         if vec.x < MIN_XZ {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("x out of range"),
-                &ExpectedAtLeast(MIN_XZ),
-            ));
+            return Err(value_too_small_error(MIN_XZ));
         }
         if vec.x > MAX_XZ {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("x out of range"),
-                &ExpectedAtMost(MAX_XZ),
-            ));
+            return Err(value_too_big_error(MAX_XZ));
         }
         if vec.z < MIN_XZ {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("z out of range"),
-                &ExpectedAtLeast(MIN_XZ),
-            ));
+            return Err(value_too_small_error(MIN_XZ));
         }
         if vec.z > MAX_XZ {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("z out of range"),
-                &ExpectedAtMost(MAX_XZ),
-            ));
+            return Err(value_too_big_error(MAX_XZ));
         }
         if vec.y < MIN_Y {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("y out of range"),
-                &ExpectedAtLeast(MIN_Y),
-            ));
+            return Err(value_too_small_error(MIN_Y));
         }
         if vec.y > MAX_Y {
-            return Err(serde::de::Error::invalid_value(
-                Unexpected::Other("y out of range"),
-                &ExpectedAtMost(MAX_Y),
-            ));
+            return Err(value_too_big_error(MAX_Y));
         }
         Ok(Self(vec))
     }
 }
 
-impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> Serialize for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y> {
+impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> Serialize
+    for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y>
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer
+        S: Serializer,
     {
-        IVec3::new(self.0.x.clamp(MIN_XZ, MAX_XZ), self.0.y.clamp(MIN_Y, MAX_Y), self.0.z.clamp(MIN_XZ, MAX_XZ)).serialize(serializer)
+        IVec3::new(
+            self.0.x.clamp(MIN_XZ, MAX_XZ),
+            self.0.y.clamp(MIN_Y, MAX_Y),
+            self.0.z.clamp(MIN_XZ, MAX_XZ),
+        )
+        .serialize(serializer)
     }
 }
 
-impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> From<IVec3> for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y> {
+impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> From<IVec3>
+    for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y>
+{
     fn from(value: IVec3) -> Self {
         Self(value)
     }
 }
 
-impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> Deref for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y> {
+impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> Deref
+    for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y>
+{
     type Target = IVec3;
 
     fn deref(&self) -> &IVec3 {
@@ -343,7 +289,9 @@ impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> D
     }
 }
 
-impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> DerefMut for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y> {
+impl<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32> DerefMut
+    for RangedIVec3<MIN_XZ, MAX_XZ, MIN_Y, MAX_Y>
+{
     fn deref_mut(&mut self) -> &mut IVec3 {
         &mut self.0
     }
@@ -364,6 +312,41 @@ where
     }
 }
 
+pub struct DefaultToNum<const N: i64, const SCALE: i64 = 1>;
+
+impl<T, const N: i64, const SCALE: i64> ValueProvider<T> for DefaultToNum<N, SCALE>
+where
+    T: FromPrimitive + Div<Output = T>,
+{
+    fn provide() -> T {
+        T::from_i64(N).unwrap() / T::from_i64(SCALE).unwrap()
+    }
+}
+
+impl<
+        T,
+        const N: i64,
+        const VALUE_SCALE: i64,
+        const MIN: i64,
+        const MAX: i64,
+        const RANGED_SCALE: u64,
+    > ValueProvider<Ranged<T, MIN, MAX, RANGED_SCALE>> for DefaultToNum<N, VALUE_SCALE>
+where
+    T: FromPrimitive + Div<Output = T>,
+{
+    fn provide() -> Ranged<T, MIN, MAX, RANGED_SCALE> {
+        Ranged(T::from_i64(N).unwrap() / T::from_i64(VALUE_SCALE).unwrap())
+    }
+}
+
+pub struct DefaultToTrue;
+
+impl ValueProvider<bool> for DefaultToTrue {
+    fn provide() -> bool {
+        true
+    }
+}
+
 pub struct DefaultToAir;
 
 impl ValueProvider<IdentifierBuf> for DefaultToAir {
@@ -380,24 +363,46 @@ impl ValueProvider<Holder<Biome>> for DefaultToPlains {
     }
 }
 
-struct ExpectedAtLeast<T>(T);
-
-impl<T> Expected for ExpectedAtLeast<T>
+pub fn value_too_small_error<T, E>(min_value: T) -> E
 where
     T: Debug,
+    E: serde::de::Error,
 {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        write!(formatter, "at least {:?}", self.0)
+    struct ExpectedAtLeast<T>(T);
+
+    impl<T> Expected for ExpectedAtLeast<T>
+    where
+        T: Debug,
+    {
+        fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+            write!(formatter, "at least {:?}", self.0)
+        }
     }
+
+    E::invalid_value(
+        Unexpected::Other("value out of range"),
+        &ExpectedAtLeast(min_value),
+    )
 }
 
-struct ExpectedAtMost<T>(T);
-
-impl<T> Expected for ExpectedAtMost<T>
+pub fn value_too_big_error<T, E>(max_value: T) -> E
 where
     T: Debug,
+    E: serde::de::Error,
 {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        write!(formatter, "at most {:?}", self.0)
+    struct ExpectedAtMost<T>(T);
+
+    impl<T> Expected for ExpectedAtMost<T>
+    where
+        T: Debug,
+    {
+        fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+            write!(formatter, "at most {:?}", self.0)
+        }
     }
+
+    E::invalid_value(
+        Unexpected::Other("value out of range"),
+        &ExpectedAtMost(max_value),
+    )
 }

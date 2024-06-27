@@ -1,6 +1,6 @@
-use util::identifier::IdentifierBuf;
 use crate::serde_helpers::DefaultOnError;
 use serde::Deserialize;
+use util::identifier::IdentifierBuf;
 
 #[derive(Debug, Deserialize)]
 pub struct SoundEvent {

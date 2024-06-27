@@ -1,9 +1,10 @@
+mod built_in_registries;
 pub mod data;
 pub mod serde_helpers;
 
 use crate::data::holder::RegistryLoadedValues;
+use crate::data::tag::RegistryTags;
 use crate::data::world_preset::WorldPreset;
-use util::identifier::IntoIdentifier;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use std::fs::File;
@@ -12,6 +13,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::{fs, io};
 use thiserror::Error;
+use util::identifier::IntoIdentifier;
 use zip::result::ZipError;
 use zip::ZipArchive;
 
@@ -24,6 +26,8 @@ pub enum DataPackError {
     Json(#[from] serde_json::Error),
     #[error("non-utf8 file path")]
     NonUtf8FilePath,
+    #[error("recursive tag")]
+    RecursiveTag,
     #[error("zip: {0}")]
     Zip(#[from] ZipError),
 }
@@ -43,6 +47,7 @@ pub type DataPackResult<T> = Result<T, DataPackError>;
 pub struct DataPack {
     file_access: DataPackFileAccess,
     pub(crate) registry_values: RegistryLoadedValues,
+    pub(crate) registry_tags: RegistryTags,
 }
 
 impl DataPack {
@@ -61,6 +66,7 @@ impl DataPack {
         Ok(DataPack {
             file_access,
             registry_values: RegistryLoadedValues::default(),
+            registry_tags: RegistryTags::default(),
         })
     }
 
@@ -197,12 +203,16 @@ mod tests {
             }
             println!("getting gen settings for {dim_id}");
             match generator.settings.resolve(&datapack) {
-                Ok(gen_settings) => {/* println!("{dim_id} generator settings: {gen_settings:#?}") */}
+                Ok(gen_settings) => { /* println!("{dim_id} generator settings: {gen_settings:#?}") */
+                }
                 Err(err) => panic!("{dim_id} error: {err}"),
             }
         }
 
-        for biome_path in datapack.list_files_under("data/minecraft/worldgen/biome/").unwrap() {
+        for biome_path in datapack
+            .list_files_under("data/minecraft/worldgen/biome/")
+            .unwrap()
+        {
             println!("reading biome {biome_path}");
             datapack.read_json::<Biome>(biome_path).unwrap();
         }

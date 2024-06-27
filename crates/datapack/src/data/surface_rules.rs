@@ -1,10 +1,10 @@
 use crate::data::block_state::BlockState;
-use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y};
-use util::identifier::IdentifierBuf;
+use crate::data::feature::{CaveSurface, VerticalAnchor};
 use crate::serde_helpers::Ranged;
 use datapack_macros::DispatchDeserialize;
 use ordered_float::NotNan;
 use serde::Deserialize;
+use util::identifier::IdentifierBuf;
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum SurfaceRuleSource {
@@ -104,19 +104,4 @@ pub struct StoneDepthCheckConditionSource {
     pub add_surface_depth: bool,
     pub secondary_depth_range: i32,
     pub surface_type: CaveSurface,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CaveSurface {
-    Ceiling,
-    Floor,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum VerticalAnchor {
-    Absolute(Ranged<i32, { DIMENSION_MIN_Y as i64 }, { DIMENSION_MAX_Y as i64 }>),
-    AboveBottom(Ranged<i32, { DIMENSION_MIN_Y as i64 }, { DIMENSION_MAX_Y as i64 }>),
-    BelowTop(Ranged<i32, { DIMENSION_MIN_Y as i64 }, { DIMENSION_MAX_Y as i64 }>),
 }

@@ -1,4 +1,4 @@
-use crate::serde_helpers::RangedNonNegativeU32;
+use crate::serde_helpers::NonNegativeU32;
 use datapack_macros::UntaggedDeserialize;
 use serde::{Deserialize, Deserializer};
 use std::fmt::Debug;
@@ -12,7 +12,9 @@ pub const DIMENSION_MIN_Y: i32 = DIMENSION_MAX_Y - DIMENSION_Y_SIZE as i32 + 1;
 
 pub mod biome;
 pub mod biome_source;
+pub mod block_predicate;
 pub mod block_state;
+pub mod block_state_provider;
 pub mod carvers;
 pub mod density_function;
 pub mod feature;
@@ -22,9 +24,9 @@ pub mod holder;
 pub mod noise;
 pub mod sound_event;
 pub mod surface_rules;
+pub mod tag;
 pub mod value_provider;
 pub mod world_preset;
-mod block_predicate;
 
 #[derive(Debug)]
 pub struct Interval<T> {
@@ -67,9 +69,5 @@ where
 #[derive(Debug, Deserialize)]
 pub struct SimpleWeightedListEntry<T> {
     pub data: T,
-    pub weight: RangedNonNegativeU32,
-}
-
-mod sealed {
-    pub trait Sealed {}
+    pub weight: NonNegativeU32,
 }

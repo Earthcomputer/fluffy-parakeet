@@ -1,13 +1,13 @@
-use glam::IVec3;
-use ordered_float::NotNan;
-use serde::Deserialize;
-use datapack_macros::DispatchDeserialize;
-use util::direction::Direction;
-use util::heightmap_type::HeightmapType;
 use crate::data::biome::GenerationStepCarving;
 use crate::data::block_predicate::BlockPredicate;
 use crate::data::height_provider::HeightProvider;
-use crate::serde_helpers::{DefaultOnError, Ranged, RangedPositiveU32};
+use crate::serde_helpers::{DefaultOnError, PositiveU32, Ranged};
+use datapack_macros::DispatchDeserialize;
+use glam::IVec3;
+use ordered_float::NotNan;
+use serde::Deserialize;
+use util::direction::Direction;
+use util::heightmap_type::HeightmapType;
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum PlacementModifier {
@@ -97,7 +97,7 @@ pub struct RandomOffsetPlacement {
 
 #[derive(Debug, Deserialize)]
 pub struct RarityFilter {
-    pub chance: RangedPositiveU32,
+    pub chance: PositiveU32,
 }
 
 #[derive(Debug, Deserialize)]

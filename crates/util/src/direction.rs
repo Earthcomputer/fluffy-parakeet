@@ -1,8 +1,8 @@
+use glam::IVec3;
+use serde::de::Unexpected;
+use serde::{Deserialize, Deserializer, Serialize};
 use std::mem;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
-use glam::IVec3;
-use serde::{Deserialize, Deserializer, Serialize};
-use serde::de::Unexpected;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -17,8 +17,20 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub const ALL: [Direction; 6] = [Direction::Down, Direction::Up, Direction::North, Direction::South, Direction::West, Direction::East];
-    pub const HORIZONTAL: [Direction; 4] = [Direction::North, Direction::East, Direction::South, Direction::West];
+    pub const ALL: [Direction; 6] = [
+        Direction::Down,
+        Direction::Up,
+        Direction::North,
+        Direction::South,
+        Direction::West,
+        Direction::East,
+    ];
+    pub const HORIZONTAL: [Direction; 4] = [
+        Direction::North,
+        Direction::East,
+        Direction::South,
+        Direction::West,
+    ];
     pub const VERTICAL: [Direction; 2] = [Direction::Up, Direction::Down];
 
     #[inline]
@@ -113,18 +125,30 @@ impl Direction {
         }
     }
 
-    pub fn deserialize_horizontal<'de, D>(deserializer: D) -> Result<Direction, D::Error> where D: Deserializer<'de> {
+    pub fn deserialize_horizontal<'de, D>(deserializer: D) -> Result<Direction, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         let direction = Direction::deserialize(deserializer)?;
         if direction.plane() != Plane::Horizontal {
-            return Err(serde::de::Error::invalid_value(Unexpected::Other("vertical direction"), &"a horizontal direction"));
+            return Err(serde::de::Error::invalid_value(
+                Unexpected::Other("vertical direction"),
+                &"a horizontal direction",
+            ));
         }
         Ok(direction)
     }
 
-    pub fn deserialize_vertical<'de, D>(deserializer: D) -> Result<Direction, D::Error> where D: Deserializer<'de> {
+    pub fn deserialize_vertical<'de, D>(deserializer: D) -> Result<Direction, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         let direction = Direction::deserialize(deserializer)?;
         if direction.plane() != Plane::Vertical {
-            return Err(serde::de::Error::invalid_value(Unexpected::Other("horizontal direction"), &"a vertical direction"));
+            return Err(serde::de::Error::invalid_value(
+                Unexpected::Other("horizontal direction"),
+                &"a vertical direction",
+            ));
         }
         Ok(direction)
     }

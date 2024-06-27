@@ -1,9 +1,10 @@
 use crate::data::biome::{Biome, ClimateParameterPoint};
 use crate::data::holder::Holder;
-use util::identifier::IdentifierBuf;
-use crate::serde_helpers::{DefaultOnError, InlineVec, Ranged, ValueProvider};
+use crate::data::tag::HolderValueSet;
+use crate::serde_helpers::{DefaultOnError, Ranged, ValueProvider};
 use datapack_macros::DispatchDeserialize;
 use serde::Deserialize;
+use util::identifier::IdentifierBuf;
 
 #[derive(Debug, DispatchDeserialize)]
 pub enum BiomeSource {
@@ -40,7 +41,7 @@ pub struct MultiNoiseBiomeSourceEntry {
 
 #[derive(Debug, Deserialize)]
 pub struct CheckerboardColumnBiomeSource {
-    pub biomes: InlineVec<Holder<Biome>>,
+    pub biomes: HolderValueSet<Biome>,
     #[serde(default)]
     #[allow(private_interfaces)]
     pub scale: DefaultOnError<Ranged<u32, 0, 62>, DefaultToTwo>,
