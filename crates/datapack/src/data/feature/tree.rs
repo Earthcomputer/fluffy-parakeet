@@ -28,6 +28,7 @@ pub struct TreeConfiguration {
 }
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum TrunkPlacer {
     StraightTrunkPlacer(StraightTrunkPlacer),
     ForkingTrunkPlacer(ForkingTrunkPlacer),
@@ -145,6 +146,7 @@ where
 }
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum RootPlacer {
     MangroveRootPlacer(MangroveRootPlacer),
 }
@@ -181,6 +183,7 @@ pub struct MangroveRootPlacement {
 }
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum TreeDecorator {
     TrunkVine(TrunkVineDecorator),
     LeaveVine(LeaveVineDecorator),

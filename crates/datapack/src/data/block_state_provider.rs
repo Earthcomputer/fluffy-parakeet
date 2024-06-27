@@ -9,6 +9,7 @@ use ordered_float::NotNan;
 use serde::Deserialize;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum BlockStateProvider {
     SimpleStateProvider(SimpleStateProvider),
     WeightedStateProvider(WeightedStateProvider),

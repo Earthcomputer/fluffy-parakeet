@@ -5,6 +5,7 @@ use datapack_macros::DispatchDeserialize;
 use serde::Deserialize;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum HeightProvider {
     BasedToBottomHeight(BiasedOrVeryBiasedToBottomHeight),
     ConstantHeight(ConstantHeight),

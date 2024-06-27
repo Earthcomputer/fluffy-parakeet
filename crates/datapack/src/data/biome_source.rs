@@ -7,6 +7,7 @@ use serde::Deserialize;
 use util::identifier::IdentifierBuf;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum BiomeSource {
     Fixed(FixedBiomeSource),
     MultiNoise(MultiNoiseBiomeSource),

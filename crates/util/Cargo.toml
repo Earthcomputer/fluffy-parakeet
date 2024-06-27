@@ -9,3 +9,6 @@ dashmap.workspace = true
 glam.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+
+[features]
+exhaustive_enums = []

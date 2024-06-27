@@ -7,6 +7,7 @@ use serde::Deserialize;
 use util::identifier::IdentifierBuf;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum SurfaceRuleSource {
     Bandlands(BandlandsRuleSource),
     Block(BlockRuleSource),
@@ -34,6 +35,7 @@ pub struct TestRuleSource {
 }
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum SurfaceRulesConditionSource {
     Biome(BiomeConditionSource),
     NoiseThreshold(NoiseThresholdConditionSource),

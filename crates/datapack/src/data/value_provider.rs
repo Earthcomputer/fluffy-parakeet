@@ -6,6 +6,7 @@ use serde::{Deserialize, Deserializer};
 use std::fmt::Debug;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum FloatProvider {
     #[dispatch(inlinable = "deserialize_constant_float")]
     Constant(ConstantFloatProvider),
@@ -114,6 +115,7 @@ pub struct TrapezoidFloatProvider {
 }
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum IntProvider {
     #[dispatch(inlinable = "deserialize_constant_int")]
     Constant(ConstantIntProvider),

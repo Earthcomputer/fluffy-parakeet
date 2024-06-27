@@ -10,6 +10,7 @@ use util::direction::Direction;
 use util::heightmap_type::HeightmapType;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum PlacementModifier {
     BiomeFilter(BiomeFilter),
     BlockPredicateFilter(BlockPredicateFilter),

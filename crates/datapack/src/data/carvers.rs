@@ -14,6 +14,7 @@ use util::identifier::IdentifierBuf;
 use crate::data::feature::configured_feature::ProbabilityFeatureConfiguration;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum ConfiguredWorldCarver {
     Cave(CaveCarverConfiguration),
     NetherCave(CaveCarverConfiguration),

@@ -23,6 +23,7 @@ use crate::data::DIMENSION_Y_SIZE;
 use crate::data::feature::geode::GeodeConfiguration;
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum ConfiguredFeature {
     NoOp(NoneFeatureConfiguration),
     Tree(TreeConfiguration),

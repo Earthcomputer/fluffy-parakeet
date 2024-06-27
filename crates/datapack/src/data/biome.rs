@@ -34,6 +34,7 @@ pub struct ClimateSettings {
 
 #[derive(Debug, Default, Deserialize, Hash, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum TemperatureModifier {
     #[default]
     None,
@@ -66,6 +67,7 @@ pub struct BiomeSpecialEffects {
 
 #[derive(Debug, Deserialize, Hash, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum GrassColorModifier {
     None,
     DarkForest,
@@ -140,6 +142,7 @@ pub struct MobSpawnCost {
 // TODO(joe): move to mod.rs
 #[derive(Debug, Deserialize, Hash, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum GenerationStepCarving {
     Air,
     Liquid,
@@ -147,6 +150,7 @@ pub enum GenerationStepCarving {
 
 #[derive(Debug, Deserialize, Hash, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum MobCategory {
     Monster,
     Creature,

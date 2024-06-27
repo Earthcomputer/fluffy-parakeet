@@ -6,6 +6,7 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum DensityFunction {
     BlendAlpha(BlendAlphaFunction),
     BlendOffset(BlendOffsetFunction),
@@ -115,6 +116,7 @@ pub struct WeirdScaledSamplerFunction {
 }
 
 #[derive(Debug, Deserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum RarityValueMapper {
     #[serde(rename = "type_1")]
     Type1,

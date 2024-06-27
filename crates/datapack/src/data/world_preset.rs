@@ -36,6 +36,7 @@ pub struct LevelStem {
 }
 
 #[derive(Debug, DispatchDeserialize)]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum ChunkGenerator {
     Noise(NoiseBasedChunkGenerator),
     Flat(FlatLevelSource),

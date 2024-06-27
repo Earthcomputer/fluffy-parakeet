@@ -6,6 +6,7 @@ use util::identifier::IdentifierBuf;
 
 #[derive(Debug, DispatchDeserialize)]
 #[dispatch(tag_name = "predicate_type")]
+#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum RuleTest {
     AlwaysTrue(AlwaysTrueTest),
     BlockMatch(BlockMatchTest),
