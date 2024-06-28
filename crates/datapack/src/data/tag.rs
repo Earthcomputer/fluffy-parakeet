@@ -1,8 +1,8 @@
 use crate::built_in_registries::{Block, Fluid};
 use crate::data::biome::Biome;
 use crate::data::carvers::ConfiguredWorldCarver;
-use crate::data::feature::structure_set::StructureSet;
 use crate::data::holder::Holder;
+use crate::data::structure::set::StructureSet;
 use crate::{DataPack, DataPackError, DataPackResult};
 use ahash::{AHashMap, AHashSet};
 use datapack_macros::UntaggedDeserialize;

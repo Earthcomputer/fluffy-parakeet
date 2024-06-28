@@ -83,7 +83,11 @@ macro_rules! float_provider_deserializer {
             D: ::serde::de::Deserializer<'de>,
             T: From<FloatProvider>,
         {
-            Ok(T::from(FloatProvider::deserialize_ranged(deserializer, $min, $max)?))
+            Ok(T::from(FloatProvider::deserialize_ranged(
+                deserializer,
+                $min,
+                $max,
+            )?))
         }
     };
 }
@@ -192,6 +196,13 @@ impl IntProvider {
     {
         Self::deserialize_ranged(deserializer, 0, i32::MAX)
     }
+
+    pub fn deserialize_positive<'de, D>(deserializer: D) -> Result<IntProvider, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Self::deserialize_ranged(deserializer, 1, i32::MAX)
+    }
 }
 
 #[macro_export]
@@ -202,7 +213,11 @@ macro_rules! int_provider_deserializer {
             D: ::serde::de::Deserializer<'de>,
             T: From<IntProvider>,
         {
-            Ok(T::from(IntProvider::deserialize_ranged(deserializer, $min, $max)?))
+            Ok(T::from(IntProvider::deserialize_ranged(
+                deserializer,
+                $min,
+                $max,
+            )?))
         }
     };
 }

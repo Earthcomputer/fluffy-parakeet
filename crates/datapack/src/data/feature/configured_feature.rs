@@ -1,26 +1,26 @@
-use glam::IVec3;
 use crate::built_in_registries::Block;
 use crate::data::block_predicate::BlockPredicate;
 use crate::data::block_state::{BlockState, FluidState};
 use crate::data::block_state_provider::{BlockStateProvider, RuleBasedBlockStateProvider};
+use crate::data::feature::geode::GeodeConfiguration;
 use crate::data::feature::ore::{OreConfiguration, TargetBlockState};
-use crate::data::feature::structure_processor::StructureProcessorList;
 use crate::data::feature::tree::TreeConfiguration;
 use crate::data::feature::{CaveSurface, PlacedFeature, WeightedPlacedFeature};
 use crate::data::holder::Holder;
+use crate::data::structure::processor::StructureProcessorList;
 use crate::data::tag::{deserialize_hashed_tag, HolderSet, HolderValueSet};
 use crate::data::value_provider::{FloatProvider, IntProvider};
-use crate::{float_provider_deserializer, int_provider_deserializer};
+use crate::data::DIMENSION_Y_SIZE;
 use crate::serde_helpers::{
     DefaultOnError, DefaultToNum, DefaultToTrue, NonNegativeU32, PositiveU32, Ranged, ValueProvider,
 };
+use crate::{float_provider_deserializer, int_provider_deserializer};
 use datapack_macros::DispatchDeserialize;
+use glam::IVec3;
 use ordered_float::NotNan;
 use serde::Deserialize;
 use util::direction::Direction;
 use util::identifier::IdentifierBuf;
-use crate::data::DIMENSION_Y_SIZE;
-use crate::data::feature::geode::GeodeConfiguration;
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -406,7 +406,8 @@ pub struct PointedDripstoneConfiguration {
     #[serde(default)]
     pub chance_of_taller_dripstone: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<1, 5>>,
     #[serde(default)]
-    pub chance_of_directional_spread: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<7, 10>>,
+    pub chance_of_directional_spread:
+        DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<7, 10>>,
     #[serde(default)]
     pub chance_of_spread_radius2: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<1, 2>>,
     #[serde(default)]

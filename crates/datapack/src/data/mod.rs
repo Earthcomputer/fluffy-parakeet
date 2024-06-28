@@ -23,6 +23,7 @@ pub mod height_provider;
 pub mod holder;
 pub mod noise;
 pub mod sound_event;
+pub mod structure;
 pub mod surface_rules;
 pub mod tag;
 pub mod value_provider;

@@ -1,12 +1,14 @@
+use crate::data::block_state::BlockState;
+use crate::data::block_state_provider::BlockStateProvider;
+use crate::data::tag::deserialize_hashed_tag;
+use crate::data::value_provider::{IntProvider, UniformIntProvider};
+use crate::int_provider_deserializer;
+use crate::serde_helpers::{
+    DefaultOnError, DefaultToNum, DefaultToTrue, NonEmptyVec, Ranged, ValueProvider,
+};
 use ordered_float::NotNan;
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
-use crate::data::tag::deserialize_hashed_tag;
-use crate::data::block_state::BlockState;
-use crate::data::block_state_provider::BlockStateProvider;
-use crate::data::value_provider::{IntProvider, UniformIntProvider};
-use crate::int_provider_deserializer;
-use crate::serde_helpers::{DefaultOnError, DefaultToNum, DefaultToTrue, NonEmptyVec, Ranged, ValueProvider};
 
 #[derive(Debug, Deserialize)]
 pub struct GeodeConfiguration {
@@ -14,7 +16,8 @@ pub struct GeodeConfiguration {
     pub layers: GeodeLayerSettings,
     pub crack: GeodeCrackSettings,
     #[serde(default)]
-    pub use_potential_placements_chance: DefaultOnError<Ranged<NotNan<f64>, 0, 1>, DefaultToNum<35, 100>>,
+    pub use_potential_placements_chance:
+        DefaultOnError<Ranged<NotNan<f64>, 0, 1>, DefaultToNum<35, 100>>,
     #[serde(default)]
     pub use_alternate_layer0_chance: DefaultOnError<Ranged<NotNan<f64>, 0, 1>>,
     #[serde(default)]

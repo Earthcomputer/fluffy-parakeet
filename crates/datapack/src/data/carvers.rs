@@ -1,17 +1,17 @@
 use crate::built_in_registries::Block;
 use crate::data::block_state::BlockState;
+use crate::data::feature::configured_feature::ProbabilityFeatureConfiguration;
 use crate::data::feature::VerticalAnchor;
 use crate::data::height_provider::HeightProvider;
 use crate::data::tag::HolderSet;
 use crate::data::value_provider::FloatProvider;
 use crate::float_provider_deserializer;
-use crate::serde_helpers::{NonNegativeU32, Ranged};
+use crate::serde_helpers::NonNegativeU32;
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use ordered_float::NotNan;
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::collections::BTreeMap;
 use util::identifier::IdentifierBuf;
-use crate::data::feature::configured_feature::ProbabilityFeatureConfiguration;
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]

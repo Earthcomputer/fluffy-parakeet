@@ -3,9 +3,10 @@ use crate::data::biome_source::MultiNoiseBiomeSourceParameterList;
 use crate::data::carvers::ConfiguredWorldCarver;
 use crate::data::density_function::{DensityFunction, NoiseParameters};
 use crate::data::feature::configured_feature::ConfiguredFeature;
-use crate::data::feature::structure_set::StructureSet;
 use crate::data::feature::PlacedFeature;
 use crate::data::noise::NoiseGeneratorSettings;
+use crate::data::structure::set::StructureSet;
+use crate::data::structure::Structure;
 use crate::{DataPack, DataPackResult};
 use datapack_macros::UntaggedDeserialize;
 use serde::Serialize;
@@ -57,6 +58,7 @@ registries! {
     noise: NoiseParameters["worldgen/noise"];
     noise_settings: NoiseGeneratorSettings["worldgen/noise_settings"];
     placed_feature: PlacedFeature["worldgen/placed_feature"];
+    structure: Structure["worldgen/structure"];
     structure_set: StructureSet["worldgen/structure_set"];
 }
 

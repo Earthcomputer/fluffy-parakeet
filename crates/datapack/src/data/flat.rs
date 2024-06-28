@@ -1,6 +1,6 @@
 use crate::data::biome::Biome;
-use crate::data::feature::structure_set::StructureSet;
 use crate::data::holder::Holder;
+use crate::data::structure::set::StructureSet;
 use crate::data::tag::HolderSet;
 use crate::data::DIMENSION_Y_SIZE;
 use crate::serde_helpers::{DefaultOnError, DefaultToAir, DefaultToPlains, Ranged};

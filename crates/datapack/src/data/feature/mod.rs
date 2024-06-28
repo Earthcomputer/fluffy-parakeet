@@ -1,20 +1,18 @@
-use ordered_float::NotNan;
 use crate::data::feature::configured_feature::ConfiguredFeature;
 use crate::data::feature::placement_modifier::PlacementModifier;
 use crate::data::holder::Holder;
 use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y};
 use crate::serde_helpers::Ranged;
+use ordered_float::NotNan;
 use serde::Deserialize;
 
 pub mod configured_feature;
 pub mod feature_size;
+mod geode;
 pub mod ore;
 pub mod placement_modifier;
 pub mod rule_test;
-pub mod structure_processor;
-pub mod structure_set;
 pub mod tree;
-mod geode;
 
 #[derive(Debug, Deserialize)]
 pub struct PlacedFeature {
