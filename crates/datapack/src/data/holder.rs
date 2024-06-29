@@ -5,6 +5,7 @@ use crate::data::density_function::{DensityFunction, NoiseParameters};
 use crate::data::feature::configured_feature::ConfiguredFeature;
 use crate::data::feature::PlacedFeature;
 use crate::data::noise::NoiseGeneratorSettings;
+use crate::data::structure::jigsaw::StructureTemplatePool;
 use crate::data::structure::set::StructureSet;
 use crate::data::structure::Structure;
 use crate::{DataPack, DataPackResult};
@@ -60,6 +61,7 @@ registries! {
     placed_feature: PlacedFeature["worldgen/placed_feature"];
     structure: Structure["worldgen/structure"];
     structure_set: StructureSet["worldgen/structure_set"];
+    template_pool: StructureTemplatePool["worldgen/template_pool"];
 }
 
 #[derive(Debug, UntaggedDeserialize, Serialize)]

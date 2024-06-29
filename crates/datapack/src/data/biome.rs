@@ -2,6 +2,7 @@ use crate::data::carvers::ConfiguredWorldCarver;
 use crate::data::feature::PlacedFeature;
 use crate::data::holder::Holder;
 use crate::data::sound_event::SoundEvent;
+use crate::data::step::CarvingStep;
 use crate::data::tag::HolderValueSet;
 use crate::data::Interval;
 use crate::serde_helpers::{PositiveU32, Ranged};
@@ -105,7 +106,7 @@ pub struct Music {
 
 #[derive(Debug, Deserialize)]
 pub struct BiomeGenerationSettings {
-    pub carvers: AHashMap<GenerationStepCarving, HolderValueSet<ConfiguredWorldCarver>>,
+    pub carvers: AHashMap<CarvingStep, HolderValueSet<ConfiguredWorldCarver>>,
     pub features: Vec<Vec<Holder<PlacedFeature>>>,
 }
 
@@ -137,15 +138,6 @@ pub struct SpawnerData {
 pub struct MobSpawnCost {
     pub energy_budget: NotNan<f64>,
     pub charge: NotNan<f64>,
-}
-
-// TODO(joe): move to mod.rs
-#[derive(Debug, Deserialize, Hash, Eq, PartialEq)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
-pub enum GenerationStepCarving {
-    Air,
-    Liquid,
 }
 
 #[derive(Debug, Deserialize, Hash, Eq, PartialEq)]

@@ -2,17 +2,25 @@ use crate::data::feature::VerticalAnchor;
 use crate::data::SimpleWeightedListEntry;
 use crate::serde_helpers::{NonNegativeU32, Ranged};
 use datapack_macros::DispatchDeserialize;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
 pub enum HeightProvider {
     BasedToBottomHeight(BiasedOrVeryBiasedToBottomHeight),
+    #[dispatch(inlinable = "deserialize_constant_height")]
     ConstantHeight(ConstantHeight),
     TrapezoidHeight(TrapezoidHeight),
     UniformHeight(UniformHeight),
     VeryBiasedToBottomHeight(BiasedOrVeryBiasedToBottomHeight),
     WeightedListHeight(WeightedListHeight),
+}
+
+fn deserialize_constant_height<'de, D>(deserializer: D) -> Result<ConstantHeight, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(ConstantHeight(VerticalAnchor::deserialize(deserializer)?))
 }
 
 #[derive(Debug, Deserialize)]

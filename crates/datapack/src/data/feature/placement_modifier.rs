@@ -1,6 +1,6 @@
-use crate::data::biome::GenerationStepCarving;
 use crate::data::block_predicate::BlockPredicate;
 use crate::data::height_provider::HeightProvider;
+use crate::data::step::CarvingStep;
 use crate::serde_helpers::{DefaultOnError, PositiveU32, Ranged};
 use datapack_macros::DispatchDeserialize;
 use glam::IVec3;
@@ -39,7 +39,7 @@ pub struct BlockPredicateFilter {
 
 #[derive(Debug, Deserialize)]
 pub struct CarvingMaskPlacement {
-    pub step: GenerationStepCarving,
+    pub step: CarvingStep,
 }
 
 #[derive(Debug, Deserialize)]
