@@ -4,11 +4,12 @@ use crate::data::tag::deserialize_hashed_tag;
 use crate::data::value_provider::{IntProvider, UniformIntProvider};
 use crate::int_provider_deserializer;
 use crate::serde_helpers::{
-    DefaultOnError, DefaultToNum, DefaultToTrue, NonEmptyVec, Ranged, ValueProvider,
+    DefaultOnError, DefaultToNum, DefaultToRanged, DefaultToTrue, NonEmptyVec, ValueProvider,
 };
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
+use util::ranged::Ranged;
 
 #[derive(Debug, Deserialize)]
 pub struct GeodeConfiguration {
@@ -17,9 +18,9 @@ pub struct GeodeConfiguration {
     pub crack: GeodeCrackSettings,
     #[serde(default)]
     pub use_potential_placements_chance:
-        DefaultOnError<Ranged<NotNan<f64>, 0, 1>, DefaultToNum<35, 100>>,
+        DefaultOnError<Ranged<f64, 0, 1>, DefaultToRanged<35, 100>>,
     #[serde(default)]
-    pub use_alternate_layer0_chance: DefaultOnError<Ranged<NotNan<f64>, 0, 1>>,
+    pub use_alternate_layer0_chance: DefaultOnError<Ranged<f64, 0, 1>>,
     #[serde(default)]
     pub placements_require_layer0_alternate: DefaultOnError<bool, DefaultToTrue>,
     #[serde(deserialize_with = "one_twenty_provider")]
@@ -36,7 +37,7 @@ pub struct GeodeConfiguration {
     #[serde(default)]
     pub max_gen_offset: DefaultOnError<i32, DefaultToNum<16>>,
     #[serde(default)]
-    pub noise_multiplier: DefaultOnError<Ranged<NotNan<f64>, 0, 1>, DefaultToNum<5, 100>>,
+    pub noise_multiplier: DefaultOnError<Ranged<f64, 0, 1>, DefaultToRanged<5, 100>>,
     pub invalid_blocks_threshold: i32,
 }
 
@@ -90,21 +91,21 @@ pub struct GeodeBlockSettings {
 #[derive(Debug, Deserialize)]
 pub struct GeodeLayerSettings {
     #[serde(default)]
-    pub filling: DefaultOnError<Ranged<NotNan<f64>, 1, 5000, 100>, DefaultToNum<17, 10>>,
+    pub filling: DefaultOnError<Ranged<f64, 1, 5000, 100>, DefaultToRanged<17, 10>>,
     #[serde(default)]
-    pub inner_layer: DefaultOnError<Ranged<NotNan<f64>, 1, 5000, 100>, DefaultToNum<22, 10>>,
+    pub inner_layer: DefaultOnError<Ranged<f64, 1, 5000, 100>, DefaultToRanged<22, 10>>,
     #[serde(default)]
-    pub middle_layer: DefaultOnError<Ranged<NotNan<f64>, 1, 5000, 100>, DefaultToNum<32, 10>>,
+    pub middle_layer: DefaultOnError<Ranged<f64, 1, 5000, 100>, DefaultToRanged<32, 10>>,
     #[serde(default)]
-    pub outer_layer: DefaultOnError<Ranged<NotNan<f64>, 1, 5000, 100>, DefaultToNum<42, 10>>,
+    pub outer_layer: DefaultOnError<Ranged<f64, 1, 5000, 100>, DefaultToRanged<42, 10>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct GeodeCrackSettings {
     #[serde(default)]
-    pub generate_crack_chance: DefaultOnError<Ranged<NotNan<f64>, 0, 1>, DefaultToNum<1>>,
+    pub generate_crack_chance: DefaultOnError<Ranged<f64, 0, 1>, DefaultToRanged<1>>,
     #[serde(default)]
-    pub base_crack_size: DefaultOnError<Ranged<NotNan<f64>, 0, 5>, DefaultToNum<2>>,
+    pub base_crack_size: DefaultOnError<Ranged<f64, 0, 5>, DefaultToRanged<2>>,
     #[serde(default)]
-    pub crack_point_offset: DefaultOnError<Ranged<u32, 0, 10>, DefaultToNum<2>>,
+    pub crack_point_offset: DefaultOnError<Ranged<u32, 0, 10>, DefaultToRanged<2>>,
 }

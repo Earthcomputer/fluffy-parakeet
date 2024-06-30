@@ -4,8 +4,8 @@ use crate::data::density_function::DensityFunction;
 use crate::data::holder::Holder;
 use crate::data::surface_rules::SurfaceRuleSource;
 use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y, DIMENSION_Y_SIZE};
-use crate::serde_helpers::Ranged;
 use serde::Deserialize;
+use util::ranged::Ranged;
 
 #[derive(Debug, Deserialize)]
 pub struct NoiseGeneratorSettings {

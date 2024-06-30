@@ -1,10 +1,10 @@
 use crate::data::block_state::BlockState;
 use crate::data::feature::{CaveSurface, VerticalAnchor};
-use crate::serde_helpers::Ranged;
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
+use util::ranged::Ranged;
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -58,8 +58,8 @@ pub struct BiomeConditionSource {
 #[derive(Debug, Deserialize)]
 pub struct NoiseThresholdConditionSource {
     pub noise: IdentifierBuf,
-    pub min_threshold: NotNan<f64>,
-    pub max_threshold: NotNan<f64>,
+    pub min_threshold: f64,
+    pub max_threshold: f64,
 }
 
 #[derive(Debug, Deserialize)]

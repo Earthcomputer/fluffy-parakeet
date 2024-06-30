@@ -6,12 +6,12 @@ use crate::data::height_provider::HeightProvider;
 use crate::data::tag::HolderSet;
 use crate::data::value_provider::FloatProvider;
 use crate::float_provider_deserializer;
-use crate::serde_helpers::NonNegativeU32;
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use util::identifier::IdentifierBuf;
+use util::ranged::NonNegativeI32;
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -83,10 +83,10 @@ pub struct CanyonCarverConfiguration {
 
 #[derive(Debug, Deserialize)]
 pub struct CanyonShapeConfiguration {
-    pub distance_factor: NotNan<f32>,
-    pub thickness: NotNan<f32>,
-    pub width_smoothness: NonNegativeU32,
+    pub distance_factor: f32,
+    pub thickness: f32,
+    pub width_smoothness: NonNegativeI32,
     pub horizontal_radius_factor: FloatProvider,
-    pub vertical_radius_default_factor: NotNan<f32>,
-    pub vertical_radius_center_factor: NotNan<f32>,
+    pub vertical_radius_default_factor: f32,
+    pub vertical_radius_center_factor: f32,
 }

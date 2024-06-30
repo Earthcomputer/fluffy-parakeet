@@ -1,14 +1,15 @@
 use crate::data::biome::Biome;
 use crate::data::holder::Holder;
 use glam::IVec3;
+
 use num::FromPrimitive;
-use ordered_float::NotNan;
-use serde::de::{Expected, Unexpected};
+use serde::de::Unexpected;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut, Div};
 use util::identifier::IdentifierBuf;
+use util::ranged::{value_too_big_error, value_too_small_error, Ranged, RangedValue};
 
 /// Converts deserialize errors into the value provided by `Def`
 pub struct DefaultOnError<T, Def = DefaultValueProvider<T>>(T, PhantomData<Def>);
@@ -132,93 +133,6 @@ impl<T> DerefMut for NonEmptyVec<T> {
     }
 }
 
-/// Checks that the value is in range on deserialization, clamps it on serialization
-#[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Ranged<T, const MIN: i64, const MAX: i64, const SCALE: u64 = 1>(T);
-
-pub type NonNegativeU32 = Ranged<u32, 0, { i32::MAX as i64 }>;
-pub type PositiveU32 = Ranged<u32, 1, { i32::MAX as i64 }>;
-
-impl<'de, T, const MIN: i64, const MAX: i64, const SCALE: u64> Deserialize<'de>
-    for Ranged<T, MIN, MAX, SCALE>
-where
-    T: Deserialize<'de> + Ord + FromPrimitive + Div<Output = T> + Debug,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let result = T::deserialize(deserializer)?;
-        let min = T::from_i64(MIN).unwrap() / T::from_u64(SCALE).unwrap();
-        let max = T::from_i64(MAX).unwrap() / T::from_u64(SCALE).unwrap();
-        if result < min {
-            return Err(value_too_small_error(min));
-        }
-        if result > max {
-            return Err(value_too_big_error(max));
-        }
-        Ok(Ranged(result))
-    }
-}
-
-impl<T, const MIN: i64, const MAX: i64, const SCALE: u64> Serialize for Ranged<T, MIN, MAX, SCALE>
-where
-    T: Serialize + Ord + FromPrimitive + Div<Output = T>,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let min = T::from_i64(MIN).unwrap() / T::from_u64(SCALE).unwrap();
-        let max = T::from_i64(MAX).unwrap() / T::from_u64(SCALE).unwrap();
-        let value = (&self.0).clamp(&min, &max);
-        value.serialize(serializer)
-    }
-}
-
-impl<T, const MIN: i64, const MAX: i64, const SCALE: u64> From<T> for Ranged<T, MIN, MAX, SCALE> {
-    fn from(value: T) -> Self {
-        Self(value)
-    }
-}
-
-impl<T, const MIN: i64, const MAX: i64, const SCALE: u64> Deref for Ranged<T, MIN, MAX, SCALE> {
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        &self.0
-    }
-}
-
-impl<T, const MIN: i64, const MAX: i64, const SCALE: u64> DerefMut for Ranged<T, MIN, MAX, SCALE> {
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.0
-    }
-}
-
-pub struct PositiveF32;
-impl PositiveF32 {
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<NotNan<f32>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let value = Deserialize::deserialize(deserializer)?;
-        if value <= NotNan::default() {
-            return Err(value_too_small_error(f32::MIN_POSITIVE));
-        }
-        Ok(value)
-    }
-
-    pub fn serialize<S>(value: &NotNan<f32>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        (*value)
-            .max(NotNan::new(f32::MIN_POSITIVE).unwrap())
-            .serialize(serializer)
-    }
-}
-
 /// Checks that an [`IVec3`] is in range on deserialization, clamps it on serialization
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
 pub struct RangedIVec3<const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i32>(
@@ -234,22 +148,40 @@ impl<'de, const MIN_XZ: i32, const MAX_XZ: i32, const MIN_Y: i32, const MAX_Y: i
     {
         let vec = IVec3::deserialize(deserializer)?;
         if vec.x < MIN_XZ {
-            return Err(value_too_small_error(MIN_XZ));
+            return Err(value_too_small_error(
+                Unexpected::Other("vector out of range"),
+                MIN_XZ,
+            ));
         }
         if vec.x > MAX_XZ {
-            return Err(value_too_big_error(MAX_XZ));
+            return Err(value_too_big_error(
+                Unexpected::Other("vector out of range"),
+                MAX_XZ,
+            ));
         }
         if vec.z < MIN_XZ {
-            return Err(value_too_small_error(MIN_XZ));
+            return Err(value_too_small_error(
+                Unexpected::Other("vector out of range"),
+                MIN_XZ,
+            ));
         }
         if vec.z > MAX_XZ {
-            return Err(value_too_big_error(MAX_XZ));
+            return Err(value_too_big_error(
+                Unexpected::Other("vector out of range"),
+                MAX_XZ,
+            ));
         }
         if vec.y < MIN_Y {
-            return Err(value_too_small_error(MIN_Y));
+            return Err(value_too_small_error(
+                Unexpected::Other("vector out of range"),
+                MIN_Y,
+            ));
         }
         if vec.y > MAX_Y {
-            return Err(value_too_big_error(MAX_Y));
+            return Err(value_too_big_error(
+                Unexpected::Other("vector out of range"),
+                MAX_Y,
+            ));
         }
         Ok(Self(vec))
     }
@@ -312,30 +244,39 @@ where
     }
 }
 
-pub struct DefaultToNum<const N: i64, const SCALE: i64 = 1>;
+pub struct DefaultToNum<const N: i64, const SCALE: u64 = 1>;
 
-impl<T, const N: i64, const SCALE: i64> ValueProvider<T> for DefaultToNum<N, SCALE>
+impl<T, const N: i64, const SCALE: u64> ValueProvider<T> for DefaultToNum<N, SCALE>
 where
     T: FromPrimitive + Div<Output = T>,
 {
     fn provide() -> T {
-        T::from_i64(N).unwrap() / T::from_i64(SCALE).unwrap()
+        T::from_i64(N).unwrap() / T::from_u64(SCALE).unwrap()
     }
 }
+
+pub struct DefaultToRanged<const N: i64, const SCALE: u64 = 1>;
 
 impl<
         T,
         const N: i64,
-        const VALUE_SCALE: i64,
+        const VALUE_SCALE: u64,
         const MIN: i64,
         const MAX: i64,
         const RANGED_SCALE: u64,
-    > ValueProvider<Ranged<T, MIN, MAX, RANGED_SCALE>> for DefaultToNum<N, VALUE_SCALE>
+        const MIN_INCLUSIVE: bool,
+        const MAX_INCLUSIVE: bool,
+        const HAS_MIN: bool,
+        const HAS_MAX: bool,
+    >
+    ValueProvider<Ranged<T, MIN, MAX, RANGED_SCALE, MIN_INCLUSIVE, MAX_INCLUSIVE, HAS_MIN, HAS_MAX>>
+    for DefaultToRanged<N, VALUE_SCALE>
 where
-    T: FromPrimitive + Div<Output = T>,
+    T: RangedValue,
 {
-    fn provide() -> Ranged<T, MIN, MAX, RANGED_SCALE> {
-        Ranged(T::from_i64(N).unwrap() / T::from_i64(VALUE_SCALE).unwrap())
+    fn provide() -> Ranged<T, MIN, MAX, RANGED_SCALE, MIN_INCLUSIVE, MAX_INCLUSIVE, HAS_MIN, HAS_MAX>
+    {
+        Ranged::new(T::from_i64(N).unwrap() / T::from_u64(VALUE_SCALE).unwrap()).unwrap()
     }
 }
 
@@ -361,48 +302,4 @@ impl ValueProvider<Holder<Biome>> for DefaultToPlains {
     fn provide() -> Holder<Biome> {
         Holder::Reference(IdentifierBuf::new("plains").unwrap())
     }
-}
-
-pub fn value_too_small_error<T, E>(min_value: T) -> E
-where
-    T: Debug,
-    E: serde::de::Error,
-{
-    struct ExpectedAtLeast<T>(T);
-
-    impl<T> Expected for ExpectedAtLeast<T>
-    where
-        T: Debug,
-    {
-        fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-            write!(formatter, "at least {:?}", self.0)
-        }
-    }
-
-    E::invalid_value(
-        Unexpected::Other("value out of range"),
-        &ExpectedAtLeast(min_value),
-    )
-}
-
-pub fn value_too_big_error<T, E>(max_value: T) -> E
-where
-    T: Debug,
-    E: serde::de::Error,
-{
-    struct ExpectedAtMost<T>(T);
-
-    impl<T> Expected for ExpectedAtMost<T>
-    where
-        T: Debug,
-    {
-        fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
-            write!(formatter, "at most {:?}", self.0)
-        }
-    }
-
-    E::invalid_value(
-        Unexpected::Other("value out of range"),
-        &ExpectedAtMost(max_value),
-    )
 }

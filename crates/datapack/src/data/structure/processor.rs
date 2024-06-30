@@ -3,13 +3,14 @@ use crate::data::block_state::BlockState;
 use crate::data::feature::rule_test::{PosRuleTest, RuleTest};
 use crate::data::tag::{deserialize_hashed_tag, HolderSet};
 use crate::data::value_provider::IntProvider;
-use crate::serde_helpers::{DefaultOnError, Ranged, ValueProvider};
+use crate::serde_helpers::{DefaultOnError, ValueProvider};
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
-use ordered_float::NotNan;
+
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use util::heightmap_type::HeightmapType;
 use util::identifier::IdentifierBuf;
+use util::ranged::Ranged;
 
 #[derive(Debug)]
 pub struct StructureProcessorList {
@@ -66,7 +67,7 @@ pub struct BlockIgnoreProcessor {
 pub struct BlockRotProcessor {
     #[serde(default)]
     pub rottable_blocks: Option<HolderSet<Block>>,
-    pub integrity: Ranged<NotNan<f32>, 0, 1>,
+    pub integrity: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -139,7 +140,7 @@ pub struct NopProcessor {}
 
 #[derive(Debug, Deserialize)]
 pub struct BlockAgeProcessor {
-    pub mossiness: NotNan<f32>,
+    pub mossiness: f32,
 }
 
 #[derive(Debug, Deserialize)]

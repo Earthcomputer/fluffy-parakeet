@@ -3,11 +3,12 @@ use crate::data::height_provider::HeightProvider;
 use crate::data::step::DecorationStep;
 use crate::data::structure::jigsaw::JigsawStructure;
 use crate::data::tag::HolderSet;
-use crate::serde_helpers::{NonEmptyVec, Ranged};
+use crate::serde_helpers::NonEmptyVec;
 use ahash::AHashMap;
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
+use util::ranged::{PositiveF32, Ranged};
 
 pub mod jigsaw;
 pub mod placement;
@@ -150,8 +151,8 @@ pub struct OceanRuinStructure {
     #[serde(flatten)]
     pub settings: StructureSettings,
     pub biome_temp: OceanRuinType,
-    pub large_probability: Ranged<NotNan<f32>, 0, 1>,
-    pub cluster_probability: Ranged<NotNan<f32>, 0, 1>,
+    pub large_probability: Ranged<f32, 0, 1>,
+    pub cluster_probability: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -172,14 +173,13 @@ pub struct RuinedPortalStructure {
 #[derive(Debug, Deserialize)]
 pub struct RuinedPortalSetup {
     pub placement: RuinedPortalVerticalPlacement,
-    pub air_pocket_probability: Ranged<NotNan<f32>, 0, 1>,
-    pub mossiness: Ranged<NotNan<f32>, 0, 1>,
+    pub air_pocket_probability: Ranged<f32, 0, 1>,
+    pub mossiness: Ranged<f32, 0, 1>,
     pub overgrown: bool,
     pub vines: bool,
     pub can_be_cold: bool,
     pub replace_with_blackstone: bool,
-    #[serde(with = "crate::serde_helpers::PositiveF32")]
-    pub weight: NotNan<f32>,
+    pub weight: PositiveF32,
 }
 
 #[derive(Debug, Deserialize)]

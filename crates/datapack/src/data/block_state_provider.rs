@@ -3,10 +3,10 @@ use crate::data::block_state::BlockState;
 use crate::data::density_function::NoiseParameters;
 use crate::data::value_provider::IntProvider;
 use crate::data::SimpleWeightedListEntry;
-use crate::serde_helpers::Ranged;
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
+use util::ranged::{PositiveF32, Ranged};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -34,16 +34,15 @@ pub struct WeightedStateProvider {
 pub struct NoiseBasedStateProvider {
     pub seed: i64,
     pub noise: NoiseParameters,
-    #[serde(with = "crate::serde_helpers::PositiveF32")]
-    pub scale: NotNan<f32>,
+    pub scale: PositiveF32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct NoiseThresholdStateProvider {
     #[serde(flatten)]
     pub noise: NoiseBasedStateProvider,
-    pub threshold: Ranged<NotNan<f32>, -1, 1>,
-    pub high_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub threshold: Ranged<f32, -1, 1>,
+    pub high_chance: Ranged<f32, 0, 1>,
     pub default_state: BlockState,
     pub low_states: Vec<BlockState>,
     pub high_states: Vec<BlockState>,
@@ -62,8 +61,7 @@ pub struct DualNoiseStateProvider {
     pub noise: NoiseStateProvider,
     pub variety: Ranged<i32, 1, 64>,
     pub slow_noise: NoiseParameters,
-    #[serde(with = "crate::serde_helpers::PositiveF32")]
-    pub slow_scale: NotNan<f32>,
+    pub slow_scale: PositiveF32,
 }
 
 #[derive(Debug, Deserialize)]

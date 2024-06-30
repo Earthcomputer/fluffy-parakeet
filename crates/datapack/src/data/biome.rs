@@ -5,11 +5,11 @@ use crate::data::sound_event::SoundEvent;
 use crate::data::step::CarvingStep;
 use crate::data::tag::HolderValueSet;
 use crate::data::Interval;
-use crate::serde_helpers::{PositiveU32, Ranged};
 use ahash::AHashMap;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
+use util::ranged::{PositiveI32, Ranged};
 
 #[derive(Debug, Deserialize)]
 pub struct Biome {
@@ -27,10 +27,10 @@ pub struct Biome {
 #[derive(Debug, Deserialize)]
 pub struct ClimateSettings {
     pub has_precipitation: bool,
-    pub temperature: NotNan<f32>,
+    pub temperature: f32,
     #[serde(default)]
     pub temperature_modifier: TemperatureModifier,
-    pub downfall: NotNan<f32>,
+    pub downfall: f32,
 }
 
 #[derive(Debug, Default, Deserialize, Hash, Eq, PartialEq)]
@@ -79,7 +79,7 @@ pub enum GrassColorModifier {
 pub struct AmbientParticleSettings {
     // TODO(feat/particles)
     // pub options: ParticleTypes,
-    pub probability: NotNan<f32>,
+    pub probability: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -87,13 +87,13 @@ pub struct AmbientMoodSettings {
     pub sound: Holder<SoundEvent>,
     pub tick_delay: i32,
     pub block_search_extent: i32,
-    pub offset: NotNan<f64>,
+    pub offset: f64,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AmbientAdditionsSettings {
     pub sound: Holder<SoundEvent>,
-    pub tick_chance: NotNan<f64>,
+    pub tick_chance: f64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -113,13 +113,13 @@ pub struct BiomeGenerationSettings {
 #[derive(Debug, Deserialize)]
 pub struct MobSpawnSettings {
     #[serde(default = "default_creature_spawn_probability")]
-    pub creature_spawn_probability: Ranged<NotNan<f32>, 0, 9999999, 10000000>,
+    pub creature_spawn_probability: Ranged<f32, 0, 9999999, 10000000>,
     pub spawners: AHashMap<MobCategory, Vec<SpawnerData>>,
     pub spawn_costs: AHashMap<IdentifierBuf, MobSpawnCost>,
 }
 
-fn default_creature_spawn_probability() -> Ranged<NotNan<f32>, 0, 9999999, 10000000> {
-    From::from(NotNan::new(0.1).unwrap())
+fn default_creature_spawn_probability() -> Ranged<f32, 0, 9999999, 10000000> {
+    Ranged::new(0.1).unwrap()
 }
 
 #[derive(Debug, Deserialize)]
@@ -129,15 +129,15 @@ pub struct SpawnerData {
     pub ty: IdentifierBuf,
     pub weight: u32,
     #[serde(rename = "minCount")]
-    pub min_count: PositiveU32,
+    pub min_count: PositiveI32,
     #[serde(rename = "maxCount")]
-    pub max_count: PositiveU32,
+    pub max_count: PositiveI32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MobSpawnCost {
-    pub energy_budget: NotNan<f64>,
-    pub charge: NotNan<f64>,
+    pub energy_budget: f64,
+    pub charge: f64,
 }
 
 #[derive(Debug, Deserialize, Hash, Eq, PartialEq)]
@@ -157,7 +157,7 @@ pub enum MobCategory {
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
 pub struct ClimateParameter {
-    pub interval: Interval<Ranged<NotNan<f32>, -2, 2>>,
+    pub interval: Interval<Ranged<f32, -2, 2>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -168,5 +168,5 @@ pub struct ClimateParameterPoint {
     pub erosion: ClimateParameter,
     pub depth: ClimateParameter,
     pub weirdness: ClimateParameter,
-    pub offset: Ranged<NotNan<f32>, 0, 1>,
+    pub offset: Ranged<f32, 0, 1>,
 }

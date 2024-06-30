@@ -1,10 +1,11 @@
 use crate::data::biome::{Biome, ClimateParameterPoint};
 use crate::data::holder::Holder;
 use crate::data::tag::HolderValueSet;
-use crate::serde_helpers::{DefaultOnError, Ranged, ValueProvider};
+use crate::serde_helpers::{DefaultOnError, ValueProvider};
 use datapack_macros::DispatchDeserialize;
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
+use util::ranged::Ranged;
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -51,7 +52,7 @@ pub struct CheckerboardColumnBiomeSource {
 struct DefaultToTwo;
 impl ValueProvider<Ranged<u32, 0, 62>> for DefaultToTwo {
     fn provide() -> Ranged<u32, 0, 62> {
-        From::from(2)
+        Ranged::new(2).unwrap()
     }
 }
 

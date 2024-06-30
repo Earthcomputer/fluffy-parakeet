@@ -4,11 +4,12 @@ use crate::data::holder::Holder;
 use crate::data::structure::processor::StructureProcessorList;
 use crate::data::structure::StructureSettings;
 use crate::data::SimpleWeightedListEntry;
-use crate::serde_helpers::{DefaultOnError, NonNegativeU32, Ranged};
+use crate::serde_helpers::DefaultOnError;
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
 use serde::{Deserialize, Deserializer};
 use util::heightmap_type::HeightmapType;
 use util::identifier::IdentifierBuf;
+use util::ranged::{NonNegativeI32, Ranged};
 
 #[derive(Debug, Deserialize)]
 pub struct JigsawStructure {
@@ -122,8 +123,8 @@ pub struct DirectAliasBinding {
 
 #[derive(Debug, Default)]
 pub struct DimensionPadding {
-    pub bottom: NonNegativeU32,
-    pub top: NonNegativeU32,
+    pub bottom: NonNegativeI32,
+    pub top: NonNegativeI32,
 }
 
 impl<'de> Deserialize<'de> for DimensionPadding {
@@ -134,13 +135,13 @@ impl<'de> Deserialize<'de> for DimensionPadding {
         #[derive(Deserialize)]
         struct SurrogateRecord {
             #[serde(default)]
-            pub bottom: DefaultOnError<NonNegativeU32>,
+            pub bottom: DefaultOnError<NonNegativeI32>,
             #[serde(default)]
-            pub top: DefaultOnError<NonNegativeU32>,
+            pub top: DefaultOnError<NonNegativeI32>,
         }
         #[derive(UntaggedDeserialize)]
         enum Surrogate {
-            Constant(NonNegativeU32),
+            Constant(NonNegativeI32),
             Record(SurrogateRecord),
         }
         match Surrogate::deserialize(deserializer)? {

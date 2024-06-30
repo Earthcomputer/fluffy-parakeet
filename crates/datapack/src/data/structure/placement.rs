@@ -1,10 +1,11 @@
 use crate::data::biome::Biome;
 use crate::data::tag::HolderSet;
-use crate::serde_helpers::{NonNegativeU32, Ranged, RangedIVec3};
+use crate::serde_helpers::RangedIVec3;
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
+use util::ranged::{NonNegativeI32, Ranged};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -20,14 +21,14 @@ pub struct CommonStructurePlacement {
     #[serde(default)]
     pub frequency_reduction_method: FrequencyReductionMethod,
     #[serde(default = "one")]
-    pub frequency: Ranged<NotNan<f32>, 0, 1>,
-    pub salt: NonNegativeU32,
+    pub frequency: Ranged<f32, 0, 1>,
+    pub salt: NonNegativeI32,
     #[serde(default)]
     pub exclusion_zone: Option<ExclusionZone>,
 }
 
-fn one() -> Ranged<NotNan<f32>, 0, 1> {
-    Ranged::from(NotNan::new(1.0).unwrap())
+fn one() -> Ranged<f32, 0, 1> {
+    Ranged::new(1.0).unwrap()
 }
 
 #[derive(Debug, Default, Deserialize)]

@@ -1,9 +1,10 @@
 use crate::data::SimpleWeightedListEntry;
-use crate::serde_helpers::{value_too_big_error, value_too_small_error, NonEmptyVec};
+use crate::serde_helpers::NonEmptyVec;
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+use serde::de::Unexpected;
 use serde::{Deserialize, Deserializer};
 use std::fmt::Debug;
+use util::ranged::{value_too_big_error, value_too_small_error};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -25,7 +26,7 @@ where
 }
 
 impl FloatProvider {
-    pub fn min_value(&self) -> NotNan<f32> {
+    pub fn min_value(&self) -> f32 {
         match self {
             FloatProvider::Constant(provider) => provider.value,
             FloatProvider::Uniform(provider) => provider.min_inclusive,
@@ -34,7 +35,7 @@ impl FloatProvider {
         }
     }
 
-    pub fn max_value(&self) -> NotNan<f32> {
+    pub fn max_value(&self) -> f32 {
         match self {
             FloatProvider::Constant(provider) => provider.value,
             FloatProvider::Uniform(provider) => provider.max_exclusive,
@@ -43,26 +44,26 @@ impl FloatProvider {
         }
     }
 
-    pub fn deserialize_ranged<'de, D, A, B>(
+    pub fn deserialize_ranged<'de, D>(
         deserializer: D,
-        min: A,
-        max: B,
+        min: f32,
+        max: f32,
     ) -> Result<FloatProvider, D::Error>
     where
         D: Deserializer<'de>,
-        A: TryInto<NotNan<f32>>,
-        B: TryInto<NotNan<f32>>,
-        <A as TryInto<NotNan<f32>>>::Error: Debug,
-        <B as TryInto<NotNan<f32>>>::Error: Debug,
     {
-        let min = min.try_into().unwrap();
-        let max = max.try_into().unwrap();
         let provider = FloatProvider::deserialize(deserializer)?;
         if provider.min_value() < min {
-            return Err(value_too_small_error(min));
+            return Err(value_too_small_error(
+                Unexpected::Other("float provider out of range"),
+                min,
+            ));
         }
         if provider.max_value() > max {
-            return Err(value_too_big_error(max));
+            return Err(value_too_big_error(
+                Unexpected::Other("float provider out of range"),
+                max,
+            ));
         }
         Ok(provider)
     }
@@ -94,28 +95,28 @@ macro_rules! float_provider_deserializer {
 
 #[derive(Debug, Deserialize)]
 pub struct ConstantFloatProvider {
-    pub value: NotNan<f32>,
+    pub value: f32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UniformFloatProvider {
-    pub min_inclusive: NotNan<f32>,
-    pub max_exclusive: NotNan<f32>,
+    pub min_inclusive: f32,
+    pub max_exclusive: f32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ClampedNormalFloatProvider {
-    pub mean: NotNan<f32>,
-    pub deviation: NotNan<f32>,
-    pub min: NotNan<f32>,
-    pub max: NotNan<f32>,
+    pub mean: f32,
+    pub deviation: f32,
+    pub min: f32,
+    pub max: f32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct TrapezoidFloatProvider {
-    pub min: NotNan<f32>,
-    pub max: NotNan<f32>,
-    pub plateau: NotNan<f32>,
+    pub min: f32,
+    pub max: f32,
+    pub plateau: f32,
 }
 
 #[derive(Debug, DispatchDeserialize)]
@@ -182,10 +183,16 @@ impl IntProvider {
     {
         let provider = IntProvider::deserialize(deserializer)?;
         if provider.min_value() < min {
-            return Err(value_too_small_error(min));
+            return Err(value_too_small_error(
+                Unexpected::Other("int provider out of range"),
+                min,
+            ));
         }
         if provider.max_value() > max {
-            return Err(value_too_big_error(max));
+            return Err(value_too_big_error(
+                Unexpected::Other("int provider out of range"),
+                max,
+            ));
         }
         Ok(provider)
     }
@@ -253,8 +260,8 @@ pub struct WeightedListIntProvider {
 
 #[derive(Debug, Deserialize)]
 pub struct ClampedNormalIntProvider {
-    pub mean: NotNan<f32>,
-    pub deviation: NotNan<f32>,
+    pub mean: f32,
+    pub deviation: f32,
     pub min_inclusive: i32,
     pub max_inclusive: i32,
 }

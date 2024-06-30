@@ -1,8 +1,8 @@
 use crate::data::feature::VerticalAnchor;
 use crate::data::SimpleWeightedListEntry;
-use crate::serde_helpers::{NonNegativeU32, Ranged};
 use datapack_macros::DispatchDeserialize;
 use serde::{Deserialize, Deserializer};
+use util::ranged::{NonNegativeI32, Ranged};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -28,11 +28,11 @@ pub struct BiasedOrVeryBiasedToBottomHeight {
     pub min_inclusive: VerticalAnchor,
     pub max_inclusive: VerticalAnchor,
     #[serde(default = "one")]
-    pub inner: NonNegativeU32,
+    pub inner: NonNegativeI32,
 }
 
-fn one() -> NonNegativeU32 {
-    Ranged::from(1)
+fn one() -> NonNegativeI32 {
+    Ranged::new(1).unwrap()
 }
 
 #[derive(Debug, Deserialize)]

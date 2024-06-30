@@ -3,9 +3,10 @@ use crate::data::holder::Holder;
 use crate::data::structure::set::StructureSet;
 use crate::data::tag::HolderSet;
 use crate::data::DIMENSION_Y_SIZE;
-use crate::serde_helpers::{DefaultOnError, DefaultToAir, DefaultToPlains, Ranged};
+use crate::serde_helpers::{DefaultOnError, DefaultToAir, DefaultToPlains};
 use serde::Deserialize;
 use util::identifier::IdentifierBuf;
+use util::ranged::Ranged;
 
 #[derive(Debug, Deserialize)]
 pub struct FlatLevelGeneratorSettings {

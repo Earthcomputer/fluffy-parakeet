@@ -1,7 +1,7 @@
-use crate::serde_helpers::NonNegativeU32;
 use datapack_macros::UntaggedDeserialize;
 use serde::{Deserialize, Deserializer};
 use std::fmt::Debug;
+use util::ranged::NonNegativeI32;
 
 const WORLD_BORDER: i32 = 30000000;
 const BITS_FOR_XZ: u32 = WORLD_BORDER.ilog2() + 2;
@@ -38,7 +38,7 @@ pub struct Interval<T> {
 
 impl<'de, T> Deserialize<'de> for Interval<T>
 where
-    T: Deserialize<'de> + Ord + Clone + Debug,
+    T: Deserialize<'de> + PartialOrd + Clone + Debug,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -71,5 +71,5 @@ where
 #[derive(Debug, Deserialize)]
 pub struct SimpleWeightedListEntry<T> {
     pub data: T,
-    pub weight: NonNegativeU32,
+    pub weight: NonNegativeI32,
 }

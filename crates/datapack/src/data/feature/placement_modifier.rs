@@ -1,13 +1,14 @@
 use crate::data::block_predicate::BlockPredicate;
 use crate::data::height_provider::HeightProvider;
 use crate::data::step::CarvingStep;
-use crate::serde_helpers::{DefaultOnError, PositiveU32, Ranged};
+use crate::serde_helpers::DefaultOnError;
 use datapack_macros::DispatchDeserialize;
 use glam::IVec3;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::direction::Direction;
 use util::heightmap_type::HeightmapType;
+use util::ranged::{PositiveI32, Ranged};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -78,14 +79,14 @@ pub struct InSquarePlacement {}
 #[derive(Debug, Deserialize)]
 pub struct NoiseBasedCountPlacement {
     pub noise_to_count_ratio: i32,
-    pub noise_factor: NotNan<f64>,
+    pub noise_factor: f64,
     #[serde(default)]
-    pub noise_offset: DefaultOnError<NotNan<f64>>,
+    pub noise_offset: DefaultOnError<f64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct NoiseThresholdCountPlacement {
-    pub noise_level: NotNan<f64>,
+    pub noise_level: f64,
     pub below_noise: i32,
     pub above_noise: i32,
 }
@@ -98,7 +99,7 @@ pub struct RandomOffsetPlacement {
 
 #[derive(Debug, Deserialize)]
 pub struct RarityFilter {
-    pub chance: PositiveU32,
+    pub chance: PositiveI32,
 }
 
 #[derive(Debug, Deserialize)]

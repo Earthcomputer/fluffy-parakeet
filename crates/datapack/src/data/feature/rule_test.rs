@@ -1,7 +1,7 @@
 use crate::data::block_state::BlockState;
 use crate::serde_helpers::{DefaultOnError, ValueProvider};
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::direction::Axis;
 use util::identifier::IdentifierBuf;
@@ -45,13 +45,13 @@ pub struct TagMatchTest {
 #[derive(Debug, Deserialize)]
 pub struct RandomBlockMatchTest {
     pub block: IdentifierBuf,
-    pub probability: NotNan<f32>,
+    pub probability: f32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct RandomBlockStateMatchTest {
     pub block_state: BlockState,
-    pub probability: NotNan<f32>,
+    pub probability: f32,
 }
 
 #[derive(Debug, DispatchDeserialize)]
@@ -75,9 +75,9 @@ pub struct PosAlwaysTrueTest {}
 #[derive(Debug, Deserialize)]
 pub struct LinearPosTest {
     #[serde(default)]
-    pub min_chance: DefaultOnError<NotNan<f32>>,
+    pub min_chance: DefaultOnError<f32>,
     #[serde(default)]
-    pub max_chance: DefaultOnError<NotNan<f32>>,
+    pub max_chance: DefaultOnError<f32>,
     #[serde(default)]
     pub min_dist: DefaultOnError<i32>,
     #[serde(default)]
@@ -87,9 +87,9 @@ pub struct LinearPosTest {
 #[derive(Debug, Deserialize)]
 pub struct AxisAlignedLinearPosTest {
     #[serde(default)]
-    pub min_chance: DefaultOnError<NotNan<f32>>,
+    pub min_chance: DefaultOnError<f32>,
     #[serde(default)]
-    pub max_chance: DefaultOnError<NotNan<f32>>,
+    pub max_chance: DefaultOnError<f32>,
     #[serde(default)]
     pub min_dist: DefaultOnError<i32>,
     #[serde(default)]

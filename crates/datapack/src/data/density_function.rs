@@ -1,9 +1,10 @@
 use crate::data::holder::Holder;
 use crate::data::{DIMENSION_MAX_Y, DIMENSION_MIN_Y};
-use crate::serde_helpers::{NonEmptyVec, Ranged};
+use crate::serde_helpers::NonEmptyVec;
 use datapack_macros::{DispatchDeserialize, UntaggedDeserialize};
-use ordered_float::NotNan;
+
 use serde::{Deserialize, Deserializer};
+use util::ranged::Ranged;
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -53,7 +54,7 @@ where
     })
 }
 
-pub type NoiseValue = Ranged<NotNan<f64>, -1000000, 1000000>;
+pub type NoiseValue = Ranged<f64, -1000000, 1000000>;
 
 #[derive(Debug, Deserialize)]
 pub struct BlendAlphaFunction {}
@@ -66,11 +67,11 @@ pub struct BeardifierFunction {}
 
 #[derive(Debug, Deserialize)]
 pub struct BlendedNoiseFunction {
-    pub xz_scale: Ranged<NotNan<f64>, 1, 1000000, 1000>,
-    pub y_scale: Ranged<NotNan<f64>, 1, 1000000, 1000>,
-    pub xz_factor: Ranged<NotNan<f64>, 1, 1000000, 1000>,
-    pub y_factor: Ranged<NotNan<f64>, 1, 1000000, 1000>,
-    pub smear_scale_multiplier: Ranged<NotNan<f64>, 1, 8>,
+    pub xz_scale: Ranged<f64, 1, 1000000, 1000>,
+    pub y_scale: Ranged<f64, 1, 1000000, 1000>,
+    pub xz_factor: Ranged<f64, 1, 1000000, 1000>,
+    pub y_factor: Ranged<f64, 1, 1000000, 1000>,
+    pub smear_scale_multiplier: Ranged<f64, 1, 8>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -101,8 +102,8 @@ pub struct CacheAllInCellFunction {
 #[derive(Debug, Deserialize)]
 pub struct NoiseFunction {
     pub noise: Holder<NoiseParameters>,
-    pub xz_scale: NotNan<f64>,
-    pub y_scale: NotNan<f64>,
+    pub xz_scale: f64,
+    pub y_scale: f64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -129,8 +130,8 @@ pub struct ShiftedNoiseFunction {
     pub shift_x: Box<Holder<DensityFunction>>,
     pub shift_y: Box<Holder<DensityFunction>>,
     pub shift_z: Box<Holder<DensityFunction>>,
-    pub xz_scale: NotNan<f64>,
-    pub y_scale: NotNan<f64>,
+    pub xz_scale: f64,
+    pub y_scale: f64,
     pub noise: Holder<NoiseParameters>,
 }
 
@@ -231,7 +232,7 @@ pub struct SplineFunction {
 
 #[derive(Debug, UntaggedDeserialize)]
 pub enum CubicSpline {
-    Constant(NotNan<f32>),
+    Constant(f32),
     Multipoint {
         coordinate: Box<Holder<DensityFunction>>,
         points: NonEmptyVec<SplinePoint>,
@@ -240,9 +241,9 @@ pub enum CubicSpline {
 
 #[derive(Debug, Deserialize)]
 pub struct SplinePoint {
-    pub location: NotNan<f32>,
+    pub location: f32,
     pub value: CubicSpline,
-    pub derivative: NotNan<f32>,
+    pub derivative: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -262,5 +263,5 @@ pub struct YClampedGradientFunction {
 pub struct NoiseParameters {
     #[serde(rename = "firstOctave")]
     pub first_octave: i32,
-    pub amplitudes: Vec<NotNan<f64>>,
+    pub amplitudes: Vec<f64>,
 }

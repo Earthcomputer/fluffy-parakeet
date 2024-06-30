@@ -4,12 +4,13 @@ use crate::data::feature::feature_size::FeatureSize;
 use crate::data::tag::HolderSet;
 use crate::data::value_provider::IntProvider;
 use crate::int_provider_deserializer;
-use crate::serde_helpers::{DefaultOnError, NonEmptyVec, PositiveU32, Ranged};
+use crate::serde_helpers::{DefaultOnError, NonEmptyVec};
 use datapack_macros::DispatchDeserialize;
-use ordered_float::NotNan;
+
 use serde::de::Unexpected;
 use serde::{Deserialize, Deserializer};
 use util::direction::Direction;
+use util::ranged::{PositiveI32, Ranged};
 
 #[derive(Debug, Deserialize)]
 pub struct TreeConfiguration {
@@ -89,23 +90,23 @@ pub struct BendingTrunkPlacer {
     #[serde(flatten)]
     pub parts: TrunkPlacerParts,
     #[serde(default = "one")]
-    pub min_height_for_leaves: PositiveU32,
+    pub min_height_for_leaves: PositiveI32,
     #[serde(deserialize_with = "deserialize_bend_length")]
     pub bend_length: IntProvider,
 }
 
 int_provider_deserializer!(deserialize_bend_length, 1, 64);
 
-fn one() -> PositiveU32 {
-    PositiveU32::from(1)
+fn one() -> PositiveI32 {
+    Ranged::new(1).unwrap()
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UpwardsBranchingTrunkPlacer {
     #[serde(flatten)]
     pub parts: TrunkPlacerParts,
-    pub extra_branch_steps: PositiveU32,
-    pub place_branch_per_log_probability: Ranged<NotNan<f32>, 0, 1>,
+    pub extra_branch_steps: PositiveI32,
+    pub place_branch_per_log_probability: Ranged<f32, 0, 1>,
     #[serde(deserialize_with = "IntProvider::deserialize_non_negative")]
     pub extra_path_length: IntProvider,
     pub can_grow_through: HolderSet<Block>,
@@ -154,7 +155,7 @@ pub enum RootPlacer {
 #[derive(Debug, Deserialize)]
 pub struct AboveRootPlacement {
     pub above_root_provider: BlockStateProvider,
-    pub above_root_placement_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub above_root_placement_chance: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -179,7 +180,7 @@ pub struct MangroveRootPlacement {
     pub muddy_roots_provider: BlockStateProvider,
     pub max_root_width: Ranged<u32, 1, 12>,
     pub max_root_length: Ranged<u32, 1, 64>,
-    pub random_skew_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub random_skew_chance: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, DispatchDeserialize)]
@@ -198,17 +199,17 @@ pub struct TrunkVineDecorator {}
 
 #[derive(Debug, Deserialize)]
 pub struct LeaveVineDecorator {
-    pub probability: Ranged<NotNan<f32>, 0, 1>,
+    pub probability: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CocoaDecorator {
-    pub probability: Ranged<NotNan<f32>, 0, 1>,
+    pub probability: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BeehiveDecorator {
-    pub probability: Ranged<NotNan<f32>, 0, 1>,
+    pub probability: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -218,7 +219,7 @@ pub struct AlterGroundDecorator {
 
 #[derive(Debug, Deserialize)]
 pub struct AttachedToLeavesDecorator {
-    pub probability: Ranged<NotNan<f32>, 0, 1>,
+    pub probability: Ranged<f32, 0, 1>,
     pub exclusion_radius_xz: Ranged<u32, 0, 16>,
     pub exclusion_radius_y: Ranged<u32, 0, 16>,
     pub block_provider: BlockStateProvider,

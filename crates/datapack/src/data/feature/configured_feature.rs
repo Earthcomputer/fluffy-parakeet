@@ -12,15 +12,16 @@ use crate::data::tag::{deserialize_hashed_tag, HolderSet, HolderValueSet};
 use crate::data::value_provider::{FloatProvider, IntProvider};
 use crate::data::DIMENSION_Y_SIZE;
 use crate::serde_helpers::{
-    DefaultOnError, DefaultToNum, DefaultToTrue, NonNegativeU32, PositiveU32, Ranged, ValueProvider,
+    DefaultOnError, DefaultToNum, DefaultToRanged, DefaultToTrue, ValueProvider,
 };
 use crate::{float_provider_deserializer, int_provider_deserializer};
 use datapack_macros::DispatchDeserialize;
 use glam::IVec3;
-use ordered_float::NotNan;
+
 use serde::Deserialize;
 use util::direction::Direction;
 use util::identifier::IdentifierBuf;
+use util::ranged::{NonNegativeI32, PositiveI32, Ranged};
 
 #[derive(Debug, DispatchDeserialize)]
 #[cfg_attr(not(feature = "exhaustive_enums"), non_exhaustive)]
@@ -95,11 +96,11 @@ pub struct NoneFeatureConfiguration {}
 #[derive(Debug, Deserialize)]
 pub struct RandomPatchConfiguration {
     #[serde(default)]
-    pub tries: DefaultOnError<PositiveU32, DefaultToNum<128>>,
+    pub tries: DefaultOnError<PositiveI32, DefaultToRanged<128>>,
     #[serde(default)]
-    pub xz_spread: DefaultOnError<NonNegativeU32, DefaultToNum<7>>,
+    pub xz_spread: DefaultOnError<NonNegativeI32, DefaultToRanged<7>>,
     #[serde(default)]
-    pub y_spread: DefaultOnError<NonNegativeU32, DefaultToNum<3>>,
+    pub y_spread: DefaultOnError<NonNegativeI32, DefaultToRanged<3>>,
     pub feature: Box<Holder<PlacedFeature>>,
 }
 
@@ -152,7 +153,7 @@ pub struct BlockColumnConfiguration {
 
 #[derive(Debug, Deserialize)]
 pub struct BlockColumnLayer {
-    pub height: NonNegativeU32,
+    pub height: NonNegativeI32,
     pub provider: BlockStateProvider,
 }
 
@@ -165,11 +166,11 @@ pub struct VegetationPatchConfiguration {
     pub surface: CaveSurface,
     #[serde(deserialize_with = "one_one_twenty_eight_provider")]
     pub depth: IntProvider,
-    pub extra_bottom_block_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub extra_bottom_block_chance: Ranged<f32, 0, 1>,
     pub vertical_range: Ranged<u32, 1, 256>,
-    pub vegetation_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub vegetation_chance: Ranged<f32, 0, 1>,
     pub xz_radius: IntProvider,
-    pub extra_edge_column_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub extra_edge_column_chance: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -195,7 +196,7 @@ pub struct MultifaceGrowthConfiguration {
     #[serde(default)]
     pub block: DefaultOnError<IdentifierBuf, DefaultToGlowLichen>,
     #[serde(default)]
-    pub search_range: DefaultOnError<Ranged<u32, 1, 64>, DefaultToNum<10>>,
+    pub search_range: DefaultOnError<Ranged<u32, 1, 64>, DefaultToRanged<10>>,
     #[serde(default)]
     pub can_place_on_floor: DefaultOnError<bool>,
     #[serde(default)]
@@ -203,7 +204,7 @@ pub struct MultifaceGrowthConfiguration {
     #[serde(default)]
     pub can_place_on_wall: DefaultOnError<bool>,
     #[serde(default)]
-    pub chance_of_spreading: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<1, 2>>,
+    pub chance_of_spreading: DefaultOnError<Ranged<f32, 0, 1>, DefaultToRanged<1, 2>>,
     pub can_be_placed_on: HolderSet<Block>,
 }
 
@@ -218,7 +219,7 @@ impl ValueProvider<IdentifierBuf> for DefaultToGlowLichen {
 pub struct UnderwaterMagmaConfiguration {
     pub floor_search_range: Ranged<u32, 0, 512>,
     pub placement_radius_around_floor: Ranged<u32, 0, 64>,
-    pub placement_probability_per_valid_position: Ranged<NotNan<f32>, 0, 1>,
+    pub placement_probability_per_valid_position: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -275,7 +276,7 @@ pub struct EndGatewayConfiguration {
 
 #[derive(Debug, Deserialize)]
 pub struct ProbabilityFeatureConfiguration {
-    pub probability: Ranged<NotNan<f32>, 0, 1>,
+    pub probability: Ranged<f32, 0, 1>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -302,15 +303,15 @@ pub struct HugeFungusConfiguration {
 #[derive(Debug, Deserialize)]
 pub struct NetherForestVegetationConfiguration {
     pub state_provider: BlockStateProvider,
-    pub spread_width: PositiveU32,
-    pub spread_height: PositiveU32,
+    pub spread_width: PositiveI32,
+    pub spread_height: PositiveI32,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct TwistingVinesConfiguration {
-    pub spread_width: PositiveU32,
-    pub spread_height: PositiveU32,
-    pub max_height: PositiveU32,
+    pub spread_width: PositiveI32,
+    pub spread_height: PositiveI32,
+    pub max_height: PositiveI32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -377,7 +378,7 @@ pub struct DripstoneClusterConfiguration {
     pub density: FloatProvider,
     #[serde(deserialize_with = "zero_two_float_provider")]
     pub wetness: FloatProvider,
-    pub chance_of_dripstone_column_at_max_distance_from_center: Ranged<NotNan<f32>, 0, 1>,
+    pub chance_of_dripstone_column_at_max_distance_from_center: Ranged<f32, 0, 1>,
     pub max_distance_from_edge_affecting_chance_of_dripstone_column: Ranged<u32, 1, 64>,
     pub max_distance_from_center_affecting_height_bias: Ranged<u32, 1, 64>,
 }
@@ -385,12 +386,12 @@ pub struct DripstoneClusterConfiguration {
 #[derive(Debug, Deserialize)]
 pub struct LargeDripstoneConfiguration {
     #[serde(default)]
-    pub floor_to_ceiling_search_range: DefaultOnError<Ranged<u32, 1, 512>, DefaultToNum<30>>,
+    pub floor_to_ceiling_search_range: DefaultOnError<Ranged<u32, 1, 512>, DefaultToRanged<30>>,
     #[serde(deserialize_with = "one_sixty_provider")]
     pub column_radius: IntProvider,
     #[serde(deserialize_with = "zero_twenty_float_provider")]
     pub height_scale: FloatProvider,
-    pub max_column_radius_to_cave_height_ratio: Ranged<NotNan<f32>, 1, 10, 10>,
+    pub max_column_radius_to_cave_height_ratio: Ranged<f32, 1, 10, 10>,
     #[serde(deserialize_with = "point_one_ten_float_provider")]
     pub stalactite_bluntness: FloatProvider,
     #[serde(deserialize_with = "point_one_ten_float_provider")]
@@ -398,20 +399,19 @@ pub struct LargeDripstoneConfiguration {
     #[serde(deserialize_with = "zero_two_float_provider")]
     pub wind_speed: FloatProvider,
     pub min_radius_for_wind: Ranged<u32, 0, 100>,
-    pub min_bluntness_for_wind: Ranged<NotNan<f32>, 0, 5>,
+    pub min_bluntness_for_wind: Ranged<f32, 0, 5>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct PointedDripstoneConfiguration {
     #[serde(default)]
-    pub chance_of_taller_dripstone: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<1, 5>>,
+    pub chance_of_taller_dripstone: DefaultOnError<Ranged<f32, 0, 1>, DefaultToRanged<1, 5>>,
     #[serde(default)]
-    pub chance_of_directional_spread:
-        DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<7, 10>>,
+    pub chance_of_directional_spread: DefaultOnError<Ranged<f32, 0, 1>, DefaultToRanged<7, 10>>,
     #[serde(default)]
-    pub chance_of_spread_radius2: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<1, 2>>,
+    pub chance_of_spread_radius2: DefaultOnError<Ranged<f32, 0, 1>, DefaultToRanged<1, 2>>,
     #[serde(default)]
-    pub chance_of_spread_radius3: DefaultOnError<Ranged<NotNan<f32>, 0, 1>, DefaultToNum<1, 2>>,
+    pub chance_of_spread_radius3: DefaultOnError<Ranged<f32, 0, 1>, DefaultToRanged<1, 2>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -422,7 +422,7 @@ pub struct SculkPatchConfiguration {
     pub growth_rounds: Ranged<u32, 0, 8>,
     pub spread_rounds: Ranged<u32, 0, 8>,
     pub extra_rare_growths: IntProvider,
-    pub catalyst_chance: Ranged<NotNan<f32>, 0, 1>,
+    pub catalyst_chance: Ranged<f32, 0, 1>,
 }
 
 int_provider_deserializer!(zero_three_provider, 0, 3);
