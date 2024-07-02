@@ -1,0 +1,8 @@
+[package]
+name = "runtime"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+glam.workspace = true
+rust-strictmath.workspace = true
