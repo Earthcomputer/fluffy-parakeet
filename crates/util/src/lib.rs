@@ -3,3 +3,4 @@ pub mod direction;
 pub mod heightmap_type;
 pub mod identifier;
 pub mod ranged;
+pub mod user_data;
