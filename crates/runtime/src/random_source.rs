@@ -1,12 +1,16 @@
+use glam::IVec3;
+use util::identifier::{Identifier, IdentifierBuf};
+
 pub trait RandomSource {
     fn fork(&mut self) -> Self;
+    fn fork_positional(&mut self) -> impl PositionalRandomFactory;
     fn set_seed(&mut self, seed: u64);
     fn next_u32_unbounded(&mut self) -> u32;
     fn next_u32(&mut self, bound: u32) -> u32;
 
     fn next_i32_between_inclusive(&mut self, min: i32, max: i32) -> i32 {
         assert!(min <= max);
-        self.next_int((max - min + 1) as u32) as i32 + min
+        self.next_u32((max - min + 1) as u32) as i32 + min
     }
     fn next_u64(&mut self) -> u64;
     fn next_bool(&mut self) -> bool;
@@ -64,6 +68,13 @@ impl RandomSource for LegacyRandomSource {
     }
 
     #[inline]
+    fn fork_positional(&mut self) -> impl PositionalRandomFactory {
+        LegacyPositionalRandomFactory {
+            seed: self.next_u64(),
+        }
+    }
+
+    #[inline]
     fn set_seed(&mut self, seed: u64) {
         *self = LegacyRandomSource::new(seed);
     }
@@ -111,7 +122,7 @@ impl RandomSource for LegacyRandomSource {
         let hi = self.next(26);
         let lo = self.next(27);
         let l = ((hi as u64) << 27) + lo as u64;
-        (l as f64) * (1.0 / (1 << 53) as f64)
+        (l as f64) * (1.0 / (1u64 << 53) as f64)
     }
 
     #[inline]
@@ -172,6 +183,14 @@ impl RandomSource for XoroshiroRandomSource {
     }
 
     #[inline]
+    fn fork_positional(&mut self) -> impl PositionalRandomFactory {
+        XoroshiroPositionalRandomFactory {
+            seed_lo: self.next_u64(),
+            seed_hi: self.next_u64(),
+        }
+    }
+
+    #[inline]
     fn set_seed(&mut self, seed: u64) {
         *self = XoroshiroRandomSource::new(seed);
     }
@@ -225,7 +244,7 @@ impl RandomSource for XoroshiroRandomSource {
     #[inline]
     fn next_f64(&mut self) -> f64 {
         let bits = self.next_u64() >> 11;
-        (bits as f64) * (1.0 / (1 << 53) as f64)
+        (bits as f64) * (1.0 / (1u64 << 53) as f64)
     }
 
     #[inline]
@@ -251,4 +270,166 @@ fn next_gaussian(mut f64_source: impl FnMut() -> f64) -> (f64, f64) {
             return (v1 * multiplier, v2 * multiplier);
         }
     }
+}
+
+pub trait PositionalRandomFactory {
+    type Hash;
+
+    fn at(&self, pos: IVec3) -> impl RandomSource;
+    fn from_seed(&self, seed: u64) -> impl RandomSource;
+    fn from_hash(&self, hash: Self::Hash) -> impl RandomSource;
+    fn hash<T>(&self, value: T) -> Self::Hash
+    where
+        T: Hashable;
+    fn from_hash_of<T>(&self, value: T) -> impl RandomSource
+    where
+        T: Hashable,
+    {
+        self.from_hash(self.hash(value))
+    }
+}
+
+pub trait Hashable {
+    fn digest_md5(&self, context: &mut md5::Context);
+    fn chars_utf16(&self) -> impl Iterator<Item = u16>;
+}
+
+impl Hashable for str {
+    #[inline]
+    fn digest_md5(&self, context: &mut md5::Context) {
+        context.consume(self)
+    }
+
+    #[inline]
+    fn chars_utf16(&self) -> impl Iterator<Item = u16> {
+        str::encode_utf16(self)
+    }
+}
+
+impl Hashable for String {
+    #[inline]
+    fn digest_md5(&self, context: &mut md5::Context) {
+        context.consume(self)
+    }
+
+    #[inline]
+    fn chars_utf16(&self) -> impl Iterator<Item = u16> {
+        str::encode_utf16(self)
+    }
+}
+
+impl Hashable for Identifier {
+    #[inline]
+    fn digest_md5(&self, context: &mut md5::Context) {
+        let (namespace, path) = self.namespace_and_path();
+        context.consume(namespace);
+        context.consume([b':']);
+        context.consume(path);
+    }
+
+    #[inline]
+    fn chars_utf16(&self) -> impl Iterator<Item = u16> {
+        let (namespace, path) = self.namespace_and_path();
+        namespace
+            .encode_utf16()
+            .chain(std::iter::once(b':' as u16))
+            .chain(path.encode_utf16())
+    }
+}
+
+impl Hashable for IdentifierBuf {
+    #[inline]
+    fn digest_md5(&self, context: &mut md5::Context) {
+        <Identifier as Hashable>::digest_md5(self, context)
+    }
+
+    #[inline]
+    fn chars_utf16(&self) -> impl Iterator<Item = u16> {
+        <Identifier as Hashable>::chars_utf16(self)
+    }
+}
+
+#[derive(Debug)]
+struct LegacyPositionalRandomFactory {
+    seed: u64,
+}
+
+impl PositionalRandomFactory for LegacyPositionalRandomFactory {
+    type Hash = i32;
+
+    #[inline]
+    fn at(&self, pos: IVec3) -> impl RandomSource {
+        LegacyRandomSource::new(get_seed(pos) ^ self.seed)
+    }
+
+    #[inline]
+    fn from_seed(&self, seed: u64) -> impl RandomSource {
+        LegacyRandomSource::new(seed)
+    }
+
+    #[inline]
+    fn from_hash(&self, hash: i32) -> impl RandomSource {
+        LegacyRandomSource::new(hash as i64 as u64 ^ self.seed)
+    }
+
+    fn hash<T>(&self, value: T) -> i32
+    where
+        T: Hashable,
+    {
+        let mut hash: i32 = 0;
+        for char in value.chars_utf16() {
+            hash = hash.wrapping_mul(31).wrapping_add(char as i32);
+        }
+        hash
+    }
+}
+
+#[derive(Debug)]
+struct XoroshiroPositionalRandomFactory {
+    seed_lo: u64,
+    seed_hi: u64,
+}
+
+impl PositionalRandomFactory for XoroshiroPositionalRandomFactory {
+    type Hash = [u8; 16];
+
+    #[inline]
+    fn at(&self, pos: IVec3) -> impl RandomSource {
+        XoroshiroRandomSource::new128(get_seed(pos) ^ self.seed_lo, self.seed_hi)
+    }
+
+    #[inline]
+    fn from_seed(&self, seed: u64) -> impl RandomSource {
+        XoroshiroRandomSource::new128(seed ^ self.seed_lo, seed ^ self.seed_hi)
+    }
+
+    #[inline]
+    fn from_hash(&self, hash: [u8; 16]) -> impl RandomSource {
+        let mut lower_hash = [0; 8];
+        lower_hash.copy_from_slice(&hash[..8]);
+        let lower = u64::from_be_bytes(lower_hash);
+        let mut upper_hash = [0; 8];
+        upper_hash.copy_from_slice(&hash[8..]);
+        let upper = u64::from_be_bytes(upper_hash);
+        XoroshiroRandomSource::new128(lower ^ self.seed_lo, upper ^ self.seed_hi)
+    }
+
+    fn hash<T>(&self, value: T) -> [u8; 16]
+    where
+        T: Hashable,
+    {
+        let mut context = md5::Context::new();
+        value.digest_md5(&mut context);
+        context.compute().into()
+    }
+}
+
+fn get_seed(pos: IVec3) -> u64 {
+    let mut n =
+        pos.x.wrapping_mul(3129871) as i64 ^ (pos.z as i64).wrapping_mul(116129781) ^ pos.y as i64;
+    n = n
+        .wrapping_mul(n)
+        .wrapping_mul(42317861)
+        .wrapping_add(n.wrapping_mul(11));
+    (n >> 16) as u64
 }
