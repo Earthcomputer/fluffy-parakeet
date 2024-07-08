@@ -1,6 +1,7 @@
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::alloc::{alloc, dealloc, handle_alloc_error, Layout};
 use std::any::TypeId;
+use std::fmt::{Debug, Formatter};
 use std::mem::{ManuallyDrop, MaybeUninit};
 
 const INLINE_DATA_SIZE: usize = 80;
@@ -8,6 +9,12 @@ const INLINE_DATA_ARRAY_SIZE: usize = INLINE_DATA_SIZE.div_ceil(std::mem::size_o
 
 pub struct UserData {
     inner_locked: RwLock<UserDataInner>,
+}
+
+impl Debug for UserData {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UserData").finish_non_exhaustive()
+    }
 }
 
 // Invariants:
@@ -91,6 +98,12 @@ impl UserData {
             // SAFETY: set_value, which we just called, sets the contained type to T
             unsafe { inner.get_data() }
         })
+    }
+
+    pub fn set<T: Send + Sync + 'static>(&self, value: T) {
+        let mut inner = self.inner_locked.write();
+        inner.drop_value();
+        inner.set_value(value);
     }
 }
 

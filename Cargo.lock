@@ -438,6 +438,7 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "datapack",
+ "parking_lot",
  "runtime",
  "thiserror",
 ]
@@ -531,6 +532,12 @@ dependencies = [
  "byteorder",
  "crc",
 ]
+
+[[package]]
+name = "md5"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
 
 [[package]]
 name = "memchr"
@@ -647,6 +654,16 @@ name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
+
+[[package]]
+name = "parking_lot"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1bf18183cf54e8d6059647fc3063646a1801cf30896933ec2311622cc4b9a27"
+dependencies = [
+ "lock_api",
+ "parking_lot_core",
+]
 
 [[package]]
 name = "parking_lot_core"
@@ -789,8 +806,11 @@ checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 name = "runtime"
 version = "0.1.0"
 dependencies = [
+ "datapack",
  "glam",
+ "md5",
  "rust-strictmath",
+ "util",
 ]
 
 [[package]]
@@ -970,6 +990,7 @@ dependencies = [
  "dashmap",
  "glam",
  "num",
+ "parking_lot",
  "serde",
  "thiserror",
 ]

@@ -135,6 +135,40 @@ impl RandomSource for LegacyRandomSource {
             g1
         }
     }
+
+    #[inline]
+    fn consume_count(&mut self, mut count: u64) {
+        count &= Self::MASK;
+
+        let mut power_multiplier = Self::MULTIPLIER;
+        let mut power_addend = Self::ADDEND;
+        let mut result_multiplier: u64 = 1;
+        let mut result_addend: u64 = 0;
+        // a*(c*x+d)+b = (a*c)*x + (a*d + b)
+        let mut mask = 1;
+        while mask <= count {
+            if (count & mask) != 0 {
+                result_addend = result_addend
+                    .wrapping_mul(power_multiplier)
+                    .wrapping_add(power_addend);
+                result_multiplier = result_multiplier.wrapping_mul(power_multiplier);
+            }
+            power_addend = power_addend
+                .wrapping_mul(power_multiplier)
+                .wrapping_add(power_addend);
+            power_multiplier = power_multiplier.wrapping_mul(power_multiplier);
+            mask <<= 1;
+        }
+        result_multiplier &= Self::MASK;
+        result_addend &= Self::MASK;
+
+        // if count is known at compile time, LLVM can compute everything up to here at compile time
+        self.seed = self
+            .seed
+            .wrapping_mul(result_multiplier)
+            .wrapping_add(result_addend)
+            & Self::MASK;
+    }
 }
 
 #[derive(Debug)]
@@ -276,16 +310,16 @@ pub trait PositionalRandomFactory {
     type Hash;
 
     fn at(&self, pos: IVec3) -> impl RandomSource;
-    fn from_seed(&self, seed: u64) -> impl RandomSource;
-    fn from_hash(&self, hash: Self::Hash) -> impl RandomSource;
+    fn create_from_seed(&self, seed: u64) -> impl RandomSource;
+    fn create_from_hash(&self, hash: Self::Hash) -> impl RandomSource;
     fn hash<T>(&self, value: T) -> Self::Hash
     where
         T: Hashable;
-    fn from_hash_of<T>(&self, value: T) -> impl RandomSource
+    fn create_from_hash_of<T>(&self, value: T) -> impl RandomSource
     where
         T: Hashable,
     {
-        self.from_hash(self.hash(value))
+        self.create_from_hash(self.hash(value))
     }
 }
 
@@ -363,12 +397,12 @@ impl PositionalRandomFactory for LegacyPositionalRandomFactory {
     }
 
     #[inline]
-    fn from_seed(&self, seed: u64) -> impl RandomSource {
+    fn create_from_seed(&self, seed: u64) -> impl RandomSource {
         LegacyRandomSource::new(seed)
     }
 
     #[inline]
-    fn from_hash(&self, hash: i32) -> impl RandomSource {
+    fn create_from_hash(&self, hash: i32) -> impl RandomSource {
         LegacyRandomSource::new(hash as i64 as u64 ^ self.seed)
     }
 
@@ -399,12 +433,12 @@ impl PositionalRandomFactory for XoroshiroPositionalRandomFactory {
     }
 
     #[inline]
-    fn from_seed(&self, seed: u64) -> impl RandomSource {
+    fn create_from_seed(&self, seed: u64) -> impl RandomSource {
         XoroshiroRandomSource::new128(seed ^ self.seed_lo, seed ^ self.seed_hi)
     }
 
     #[inline]
-    fn from_hash(&self, hash: [u8; 16]) -> impl RandomSource {
+    fn create_from_hash(&self, hash: [u8; 16]) -> impl RandomSource {
         let mut lower_hash = [0; 8];
         lower_hash.copy_from_slice(&hash[..8]);
         let lower = u64::from_be_bytes(lower_hash);

@@ -4,5 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+datapack = { path = "../datapack" }
 glam.workspace = true
+md5.workspace = true
 rust-strictmath.workspace = true
+util = { path = "../util" }

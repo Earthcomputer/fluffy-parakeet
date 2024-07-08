@@ -8,6 +8,7 @@ ahash.workspace = true
 dashmap.workspace = true
 glam.workspace = true
 num.workspace = true
+parking_lot.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 

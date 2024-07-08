@@ -16,7 +16,9 @@ edition = "2021"
 ahash = { version = "0.8.11", features = ["serde"] }
 dashmap = "6.0.1"
 glam = { version = "0.28.0", features = ["serde"] }
+md5 = "0.7.0"
 num = "0.4.3"
+parking_lot = "0.12.3"
 proc-macro2 = "1.0.86"
 quote = "1.0.36"
 rust-strictmath = "0.1.2"
